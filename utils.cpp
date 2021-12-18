@@ -137,16 +137,16 @@ bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type) {
 //end of utils namespace
 }
 
-int main() {
-    // int a[4] = {1, 2, 3, 4};
-    // int b[4] = {1, 2, 3, 4};
-    // int c[4] = {6, 10, 15, 22};
-    // std::cout << utils::check_mul<int>(a, b, c, 2, 2, 2, utils::C_ORDER) << std::endl;
-    // std::cout << fabs(-1.34) << std::endl;
-    float *a = utils::random_matrix_gpu<float>(10,5,utils::COLUMN_MAJOR,-50,50);
-    utils::print_mat_gpu<float>(a,10,5,utils::COLUMN_MAJOR);
-    delete[] a;
-    return 0;
-}
+// int main() {
+//     // int a[4] = {1, 2, 3, 4};
+//     // int b[4] = {1, 2, 3, 4};
+//     // int c[4] = {6, 10, 15, 22};
+//     // std::cout << utils::check_mul<int>(a, b, c, 2, 2, 2, utils::C_ORDER) << std::endl;
+//     // std::cout << fabs(-1.34) << std::endl;
+//     float *a = utils::random_matrix_gpu<float>(10,5,utils::COLUMN_MAJOR,-50,50);
+//     utils::print_mat_gpu<float>(a,10,5,utils::COLUMN_MAJOR);
+//     delete[] a;
+//     return 0;
+// }
 
 
