@@ -1,52 +1,55 @@
 #include <stdio.h>
-#define N 1024
-#define P 512
-#define M 256
+// #define N 1024
+// #define P 512
+// #define M 256
 /*
 #define N 512
 #define P 256
 #define M 128
 */
+#define IDX(i,j,row,col) (i*col+j)
 #define Tx 1
 #define Ty 64 //max value for Tx * Ty is 1024
 
-__global__ void mmGlobal(float A[N][P], float B[P][M], float C[N][M]);
+__global__ void mmGlobal(float *A, float *B, float *C, int M, int K, int N);
 
 int main(){
+    int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
+    printf("M=%d K=%d N=%d\n",M,K,N);
     float ms;
     float error = 0.0f;
     float temp;
+
+    float *A = (float*)malloc(M*K*sizeof(float));
+    float *B = (float*)malloc(K*N*sizeof(float));
+    float *C = (float*)malloc(M*N*sizeof(float));
     
-    float A[N][P];
-    float B[P][M];
-    float C[N][M];
-    
-    float (*dA)[P];
-    float (*dB)[M];
-    float (*dC)[M];
+    float *dA;
+    float *dB;
+    float *dC;
     
     int i,j,k;
 
-    for(i=0;i<N;i++){
-        for(j=0;j<P;j++){
-            A[i][j]=1.0f;
+    for(i=0;i<M;i++){
+        for(j=0;j<K;j++){
+            A[IDX(i,j,M,K)]=1.0f;
         }
     }
-    for(i=0;i<P;i++){
-        for(j=0;j<M;j++){
-            B[i][j]=2.0f;
+    for(i=0;i<K;i++){
+        for(j=0;j<N;j++){
+            B[IDX(i,j,K,N)]=2.0f;
         }
     }
-    cudaMalloc(&dA,sizeof(float)*N*P);
-    cudaMalloc(&dB,sizeof(float)*P*M);
-    cudaMalloc(&dC,sizeof(float)*N*M);
+    cudaMalloc((void**)&dA,sizeof(float)*M*K);
+    cudaMalloc((void**)&dB,sizeof(float)*K*N);
+    cudaMalloc((void**)&dC,sizeof(float)*N*M);
 
-    cudaMemcpy(dA,A,sizeof(float)*N*P, cudaMemcpyHostToDevice);
-    cudaMemcpy(dB,B,sizeof(float)*P*M, cudaMemcpyHostToDevice);
+    cudaMemcpy(dA,A,sizeof(float)*M*K, cudaMemcpyHostToDevice);
+    cudaMemcpy(dB,B,sizeof(float)*K*N, cudaMemcpyHostToDevice);
     cudaMemcpy(dC,C,sizeof(float)*N*M, cudaMemcpyHostToDevice);
 
     dim3 threads(Tx,Ty);
-    dim3 blocks( (N+threads.x-1)/threads.x, (M+threads.y-1)/threads.y);
+    dim3 blocks( (M+threads.x-1)/threads.x, (N+threads.y-1)/threads.y);
     
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -70,32 +73,35 @@ int main(){
 
     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
+    for(i=0;i<N;i++){
+        for(j=0;j<M;j++){
+            temp = 0;
+            for(k=0;k<K;k++){
+                temp += A[IDX(i,k,N,K)] * B[IDX(k,j,K,M)];
+            }
+            error += abs(C[IDX(i,j,M,N)]-temp);
+        }
+    }
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dC);
 
-    for(i=0;i<N;i++){
-        for(j=0;j<M;j++){
-            temp = 0;
-            for(k=0;k<P;k++){
-                temp += A[i][k] * B[k][j];
-            }
-            error += abs(C[i][j]-temp);
-        }
-    }
+    free(A);
+    free(B);
+    free(C);
+
     printf("%f\n",error);
     printf("%f\n",ms);
-    printf("%f\n",(float)(sizeof(float)*(N*M + N*M*P*2))/1.0e6/ms);
     return 0;
 }
-__global__ void mmGlobal(float A[N][P], float B[P][M], float C[N][M]){
+__global__ void mmGlobal(float *A, float *B, float *C, int M, int K, int N){
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     float temp = 0;
-    if(i < N and j < M){
-        for(int k=0;k<P;++k){
-          temp += A[i][k]*B[k][j];
+    if(i < M and j < N){
+        for(int k = 0; k < K; ++k){
+          temp += A[ IDX(i,k,M,K) ] * B[ IDX(k,j,K,N) ];
       }
-      C[i][j]=temp;
+      C[ IDX(i,j,M,N) ]=temp;
     }
 }
