@@ -1,3 +1,4 @@
+#include "utils.cpp"
 #include <stdio.h>
 // #define N 1024
 // #define P 512
@@ -19,7 +20,7 @@ int main(int argc, char *argv[]){
 
     float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
     float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
-    float *C = (float*)malloc(M*N*sizeof(float));
+    float *C = (float*)malloc(sizeof(float)*M*N);
     
     float ms;
     float *dA, *dB, *dC;
