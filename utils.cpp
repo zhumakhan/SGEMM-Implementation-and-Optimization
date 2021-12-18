@@ -3,9 +3,28 @@
 #include <random>
 #include <cmath>
 
+#ifndef IDXR
+#define IDXR(i,j,row,col) (i*col+j)
+#endif
+
+#ifndef IDXC
+#define IDXC(i,j,row,col) (j*row+i)
+#endif
+
 namespace utils {
-int C_ORDER = 1;
-int FORTRAN_ORDER = 2;
+int ROW_MAJOR = 1;
+int COLUMN_MAJOR = 2;
+
+
+
+__inline__ int IDX(int i, int j, int row, int col, int order) {
+    /*
+    0-based indexing
+    converts 2d row/column major matrix indices (i,j) to
+    1d array index
+    */
+    return (order == ROW_MAJOR ? IDXR(i,j,row,col) : IDXC(i,j,row,col));
+}
 
 template <typename T>
 T** random_fill_matrix(int row, int col, T min=0, T max=100) {
@@ -18,7 +37,7 @@ T** random_fill_matrix(int row, int col, T min=0, T max=100) {
      *   a specific type 2d pointer pointed to the matrix
      */
     T** mat = new T*[row];
-    for (int i = 0; i < col; ++i) {
+    for (int i = 0; i < row; ++i) {
         mat[i] = new T[col];
     }
 
@@ -27,7 +46,7 @@ T** random_fill_matrix(int row, int col, T min=0, T max=100) {
     std::uniform_real_distribution<T> unif(min, max);
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-	    mat[i][j] = unif(mt);
+	       mat[i][j] = unif(mt);
         }
     }
     return mat;
@@ -54,17 +73,11 @@ T* random_matrix_gpu(int row, int col, int order_type, T min=-50, T max=50) {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<T> unif(min, max);
-    if (order_type == C_ORDER ) {
-        for (int i = 0; i < row; ++i) {
-	    for (int j = 0; j < col; ++j) {
-	        mat[i*col+j] = unif(mt);
-	    }
-        }
-    } else {
-        for (int i = 0; i < row; ++i) {
-	    for (int j = 0; j < col; ++j) {
-	        mat[i+j*col] = unif(mt);
-	    }
+    
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+            // mat[ IDX(i,j,row,col,order_type) ] = unif(mt);
+            mat[ IDX(i,j,row,col,order_type) ] = IDX(i,j,row,col,COLUMN_MAJOR);
         }
     }
     return mat;
@@ -72,18 +85,11 @@ T* random_matrix_gpu(int row, int col, int order_type, T min=-50, T max=50) {
 
 template <typename T>
 void print_mat_gpu(T* mat, int row, int col, int order_type) {
-    if (order_type == C_ORDER) {
-        for (int i = 0; i < row; ++i) {
-	    for (int j = 0; j < col; ++j) {
-	        std::cout << mat[i*row + j] << " ";
-	    }std::cout << std::endl;
-        }
-    } else {
-        for (int i = 0; i < row; ++i) {
-	    for (int j = 0; j < col; ++j) {
-	        std::cout << mat[i + j*row] << " ";
-	    }std::cout << std::endl;
-        }
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+            std::cout << mat[ IDX(i,j,row,col,order_type) ] << " ";
+	    }
+        std::cout << std::endl;
     }
 }
 
@@ -99,71 +105,48 @@ void print_mat(T** mat, int row, int col) {
 
 template <typename T>
 bool check_sum(T* a, T* b, T* c, int row, int col, int order_type) {
-	if (order_type == C_ORDER) {
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-	    	if (a[i*row+j]+b[i*row+j] != c[i*row+j]) {
-				std::cout << a[i*row+j] << " " << b[i*row+j] << " "
-				 << c[i*row+j] << std::endl;
+	    	if (a[ IDX(i,j,row,col,order_type) ] + b[ IDX(i,j,row,col,order_type) ] != c[ IDX(i,j,row,col,order_type) ]) {
+				std::cout << a[ IDX(i,j,row,col,order_type) ] << " " << b[ IDX(i,j,row,col,order_type) ] << " "
+				 << c[ IDX(i,j,row,col,order_type) ] << std::endl;
 				return false;
 	    	}
 		}
     }
-    } else {
-        for (int i = 0; i < row; ++i) {
-            for (int j = 0; j < col; ++j) {
-        		if (a[i+j*row]+b[i+j*row] != c[i+j*row]) {
-					std::cout << a[i+j*row] << " " << b[i+j*row] << " "
-					 << c[i+j*row] << std::endl;
-					return false;
-				}
-			}
-		}
-	}
 	return true;
 }
 
 template <typename T>
 bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type) {
     /* Check if the result of matrix multiplication is right.*/
-    if (order_type == C_ORDER) {
+    T value = 0;
 	for (int i = 0; i < M; ++i) {
 	    for (int j = 0; j < N; ++j) {
-		T value = 0;
-		for (int k = 0; k < K; ++k) {
-		    value += a[i*K+k]*b[k*N+j];
-		}
-		if (fabs(value-c[i*N+j])>0.1) {
-		    std::cout << c[i*N+j] << " " << value << std::endl;
+		  for (int k = 0; k < K; ++k) {
+            value += a[ IDX(i, k, M, K, order_type) ] * b[ IDX(k, j, K, N, order_type) ];
+		  }
+		  if ( fabs(value - c[ IDX(i, j, M, N, order_type) ] )>0.1) {
+		    std::cout << c[ IDX(i, j, M, N, order_type) ] << " " << value << std::endl;
 		    return false;
-		}
+		  }
 	    }
-	}
-    } else {
-	for (int i = 0; i < M; ++i) {
-            for (int j = 0; j < N; ++j) {
-		T value = 0;
-		for (int k = 0; k < K; ++k) {
-		    value += a[i+k*K]*b[k+j*N];
-		}
-		if (fabs(value-c[i+j*N])>0.1) {
-		    std::cout << c[i+j*N] << " " << value << std::endl;
-		    return false;
-		}
-	    }
-	}
     }
     return true;
 }
+//end of utils namespace
 }
-/*
+
 int main() {
-    int a[4] = {1, 2, 3, 4};
-    int b[4] = {1, 2, 3, 4};
-    int c[4] = {6, 10, 15, 22};
-    std::cout << utils::check_mul<int>(a, b, c, 2, 2, 2) << std::endl;
-    std::cout << fabs(-1.34) << std::endl;
+    // int a[4] = {1, 2, 3, 4};
+    // int b[4] = {1, 2, 3, 4};
+    // int c[4] = {6, 10, 15, 22};
+    // std::cout << utils::check_mul<int>(a, b, c, 2, 2, 2, utils::C_ORDER) << std::endl;
+    // std::cout << fabs(-1.34) << std::endl;
+    float *a = utils::random_matrix_gpu<float>(10,5,utils::COLUMN_MAJOR,-50,50);
+    utils::print_mat_gpu<float>(a,10,5,utils::COLUMN_MAJOR);
+    delete[] a;
     return 0;
-}*/
+}
 
 

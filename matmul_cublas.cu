@@ -4,9 +4,9 @@
 
 int main(int argc, char *argv[]) {
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
-    float *a = utils::random_matrix_gpu<float>(M, K, utils::FORTRAN_ORDER);
-    float *b = utils::random_matrix_gpu<float>(K, N, utils::FORTRAN_ORDER);
-    float *c = new float[M*N];
+    float *a = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR);
+    float *b = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR);
+    float *c = (float*)malloc(M*N*sizeof(float));
 
     float *dev_a, *dev_b, *dev_c;
 
@@ -27,16 +27,16 @@ int main(int argc, char *argv[]) {
 
     cudaMemcpy(c, dev_c, M*N*sizeof(float), cudaMemcpyDeviceToHost);
 #ifdef CHECK
-    std::cout << (utils::check_mul<float>(a, b, c, M, K, N, utils::FORTRAN_ORDER) 
+    std::cout << (utils::check_mul<float>(a, b, c, M, K, N, utils::COLUMN_MAJOR) 
 		    ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 #ifdef DEBUG
     std::cout << "Matrix A:" << std::endl;
-    utils::print_mat_gpu(a, M, K, utils::FORTRAN_ORDER);
+    utils::print_mat_gpu(a, M, K, utils::COLUMN_MAJOR);
     std::cout << "\nMatrix B:" << std::endl;
-    utils::print_mat_gpu(b, K, N, utils::FORTRAN_ORDER);
+    utils::print_mat_gpu(b, K, N, utils::COLUMN_MAJOR);
     std::cout << "\nMatrix C:" << std::endl;
-    utils::print_mat_gpu(c, M, N, utils::FORTRAN_ORDER);
+    utils::print_mat_gpu(c, M, N, utils::COLUMN_MAJOR);
 #endif
 
     cudaFree(dev_a);
