@@ -22,9 +22,10 @@ int main(int argc, char *argv[]) {
     cublasHandle_t handle;
     cublasCreate(&handle);
     float al=1.0f, bet=0;
+    cublasStatus_t status;
     // cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
 	//	    &al, dev_a, M, dev_b, K, &bet, dev_c, M);
-    cublasStatus_t status = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
+    status = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
 		    &al, dev_a, M, dev_b, K, &bet, dev_c, M);
     
     switch(status){
