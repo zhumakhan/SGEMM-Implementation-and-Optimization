@@ -8,8 +8,8 @@ int main(int argc, char *argv[]) {
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
     printf("M=%d K=%d N=%d\n",M,K,N);
 
-    float *a = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR,-1,1);
-    float *b = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR,-1,1);
+    float *a = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR,-50,50);
+    float *b = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR,-50,50);
     float *c = (float*)malloc(M*N*sizeof(float));
 
     float *dev_a, *dev_b, *dev_c;

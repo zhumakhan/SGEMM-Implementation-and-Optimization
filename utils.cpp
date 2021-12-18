@@ -76,8 +76,7 @@ T* random_matrix_gpu(int row, int col, int order_type, T min=-50, T max=50) {
     
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-            // mat[ IDX(i,j,row,col,order_type) ] = unif(mt);
-            mat[ IDX(i,j,row,col,order_type) ] = IDX(i,j,row,col,COLUMN_MAJOR);
+            mat[ IDX(i,j,row,col,order_type) ] = unif(mt);
         }
     }
     return mat;
