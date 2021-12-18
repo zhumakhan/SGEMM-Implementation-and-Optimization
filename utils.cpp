@@ -128,7 +128,7 @@ bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type) {
             for (int k = 0; k < K; ++k) {
                 value += a[ IDX(i, k, M, K, order_type) ] * b[ IDX(k, j, K, N, order_type) ];
             }
-            if ( fabs(value - c[ IDX(i, j, M, N, order_type) ] ) > 0.01) {
+            if ( fabs(value - c[ IDX(i, j, M, N, order_type) ] ) > 0.1) {
                 std::cout << c[ IDX(i, j, M, N, order_type) ] << " " << value << std::endl;
                 return false;
             }
