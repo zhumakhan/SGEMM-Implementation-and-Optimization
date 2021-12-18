@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#define N 512
-#define P 256
-#define M 128
+// #define N 512
+// #define P 256
+// #define M 128
 
 #define N 1024
 #define P 512
