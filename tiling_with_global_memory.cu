@@ -32,12 +32,12 @@ int main(int argc, char *argv[]){
 
     for(i=0;i<M;i++){
         for(j=0;j<K;j++){
-            A[IDX(i,j,M,K)]=1.0f;
+            A[ IDX(i,j,M,K) ] = 1.0f;
         }
     }
     for(i=0;i<K;i++){
         for(j=0;j<N;j++){
-            B[IDX(i,j,K,N)]=2.0f;
+            B[ IDX(i,j,K,N) ] = 2.0f;
         }
     }
     cudaMalloc((void**)&dA,sizeof(float)*M*K);
@@ -73,13 +73,13 @@ int main(int argc, char *argv[]){
 
     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
-    for(i=0;i<N;i++){
-        for(j=0;j<M;j++){
+    for(i=0;i<M;i++){
+        for(j=0;j<N;j++){
             temp = 0;
             for(k=0;k<K;k++){
-                temp += A[IDX(i,k,N,K)] * B[IDX(k,j,K,M)];
+                temp += A[ IDX(i,k,M,K) ] * B[ IDX(k,j,K,N) ];
             }
-            error += abs(C[IDX(i,j,M,N)]-temp);
+            error += abs(C[ IDX(i,j,M,N) ]-temp);
         }
     }
     cudaFree(dA);
