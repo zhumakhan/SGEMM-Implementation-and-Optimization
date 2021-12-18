@@ -6,6 +6,7 @@
 
 int main(int argc, char *argv[]) {
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
+    printf("M=%d K=%d N=%d\n",M,K,N);
     float *a = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR);
     float *b = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR);
     float *c = (float*)malloc(M*N*sizeof(float));
@@ -19,15 +20,15 @@ int main(int argc, char *argv[]) {
     cudaMemcpy(dev_a, a, M*K*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(dev_b, b, K*N*sizeof(float), cudaMemcpyHostToDevice);
     
+    cublasStatus_t status;
     cublasHandle_t handle;
     cublasCreate(&handle);
-    float al=1.0f, bet=0;
-    cublasStatus_t status;
+    float alpha=1.0f, beta=0;
     // cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
 	//	    &al, dev_a, M, dev_b, K, &bet, dev_c, M);
     status = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
-		    &al, dev_a, M, dev_b, K, &bet, dev_c, M);
-    
+		    &alpha, dev_a, M, dev_b, K, &beta, dev_c, M);
+
     switch(status){
         case (CUBLAS_STATUS_SUCCESS):{
             break;
