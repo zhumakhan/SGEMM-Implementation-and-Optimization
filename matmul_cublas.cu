@@ -22,8 +22,18 @@ int main(int argc, char *argv[]) {
     float al=1.0f, bet=0;
     // cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
 	//	    &al, dev_a, M, dev_b, K, &bet, dev_c, M);
-    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
+    cublasStatus_t status = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
 		    &al, dev_a, M, dev_b, K, &bet, dev_c, M);
+    
+    switch(status){
+        case (CUBLAS_STATUS_SUCCESS):{
+            break;
+        }
+        default:{
+            printf("Error occured in cublasSgemm\n");
+            break;
+        }
+    }
 
     cudaMemcpy(c, dev_c, M*N*sizeof(float), cudaMemcpyDeviceToHost);
 #ifdef CHECK
