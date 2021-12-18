@@ -31,8 +31,24 @@ int main(int argc, char *argv[]) {
         case (CUBLAS_STATUS_SUCCESS):{
             break;
         }
+        case (CUBLAS_STATUS_NOT_INITIALIZED):{
+            printf("the library was not initialized\n");
+            break;
+        }
+        case (CUBLAS_STATUS_INVALID_VALUE):{
+            printf("the parameters m,n,k<0\n");
+            break;
+        }
+        case (CUBLAS_STATUS_ARCH_MISMATCH):{
+            printf("Architecture problem. in the case of cublasHgemm the device does not support math in half precision.\n");
+            break;
+        }
+        case (CUBLAS_STATUS_EXECUTION_FAILED):{
+            printf("the function failed to launch on the GPU\n");
+            break;
+        }
         default:{
-            printf("Error occured in cublasSgemm\n");
+            printf("Unknown error occured in cublasSgemm\n");
             break;
         }
     }
