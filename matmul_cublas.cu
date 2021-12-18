@@ -7,11 +7,13 @@
 int main(int argc, char *argv[]) {
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
     printf("M=%d K=%d N=%d\n",M,K,N);
+
     float *a = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR);
     float *b = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR);
     float *c = (float*)malloc(M*N*sizeof(float));
 
     float *dev_a, *dev_b, *dev_c;
+    float ms;
 
     cudaMalloc((void**)&dev_a, M*K*sizeof(float));
     cudaMalloc((void**)&dev_b, K*N*sizeof(float));
@@ -26,8 +28,26 @@ int main(int argc, char *argv[]) {
     float alpha=1.0f, beta=0;
     // cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
 	//	    &al, dev_a, M, dev_b, K, &bet, dev_c, M);
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+
     status = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, M, N, K, 
 		    &alpha, dev_a, M, dev_b, K, &beta, dev_c, M);
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&ms, start, stop);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+    
+    cudaError_t cuda_error = cudaGetLastError();
+    if(cuda_error != cudaSuccess)
+    {
+      printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
+      exit(-1);
+    }
 
     switch(status){
         case (CUBLAS_STATUS_SUCCESS):{

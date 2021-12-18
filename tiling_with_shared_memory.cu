@@ -13,6 +13,11 @@
 __global__ void mmShared(float A[N][P], float B[P][M], float C[N][M]);
 
 int main(){
+    
+    float ms;
+    float error = 0.0f;
+    float temp;
+
     float A[N][P];
     float B[P][M];
     float C[N][M];
@@ -53,18 +58,22 @@ int main(){
 
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
-    float ms;
     cudaEventElapsedTime(&ms, start, stop);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
+
+    cudaError_t cuda_error = cudaGetLastError();
+    if(cuda_error != cudaSuccess)
+    {
+      printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
+      exit(-1);
+    }
+
     cudaMemcpy(C, dC, sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dC);
-
-    float error = 0.0f;
-    float temp;
 
     for(i=0;i<N;i++){
         for(j=0;j<M;j++){

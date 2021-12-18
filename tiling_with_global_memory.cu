@@ -13,6 +13,10 @@
 __global__ void mmGlobal(float A[N][P], float B[P][M], float C[N][M]);
 
 int main(){
+    float ms;
+    float error = 0.0f;
+    float temp;
+    
     float A[N][P];
     float B[P][M];
     float C[N][M];
@@ -50,7 +54,12 @@ int main(){
     cudaEventRecord(start);
     
     mmGlobal<<<blocks,threads>>>(dA,dB,dC);
-    cudaDeviceSynchronize();
+    
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&ms, start, stop);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
     
     cudaError_t cuda_error = cudaGetLastError();
     if(cuda_error != cudaSuccess)
@@ -58,22 +67,12 @@ int main(){
       printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
       exit(-1);
     }
-    
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    float ms;
-    cudaEventElapsedTime(&ms, start, stop);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
 
     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dC);
-
-    float error = 0.0f;
-    float temp;
 
     for(i=0;i<N;i++){
         for(j=0;j<M;j++){
