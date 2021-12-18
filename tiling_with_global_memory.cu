@@ -16,37 +16,20 @@ __global__ void mmGlobal(float *A, float *B, float *C, int M, int K, int N);
 int main(int argc, char *argv[]){
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
     printf("M=%d K=%d N=%d\n",M,K,N);
-    float ms;
-    float error = 0.0f;
-    float temp;
 
-    float *A = (float*)malloc(M*K*sizeof(float));
-    float *B = (float*)malloc(K*N*sizeof(float));
+    float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
+    float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
     float *C = (float*)malloc(M*N*sizeof(float));
     
-    float *dA;
-    float *dB;
-    float *dC;
-    
-    int i,j,k;
+    float ms;
+    float *dA, *dB, *dC;
 
-    for(i=0;i<M;i++){
-        for(j=0;j<K;j++){
-            A[ IDX(i,j,M,K) ] = 1.0f;
-        }
-    }
-    for(i=0;i<K;i++){
-        for(j=0;j<N;j++){
-            B[ IDX(i,j,K,N) ] = 2.0f;
-        }
-    }
     cudaMalloc((void**)&dA,sizeof(float)*M*K);
     cudaMalloc((void**)&dB,sizeof(float)*K*N);
     cudaMalloc((void**)&dC,sizeof(float)*N*M);
 
     cudaMemcpy(dA,A,sizeof(float)*M*K, cudaMemcpyHostToDevice);
     cudaMemcpy(dB,B,sizeof(float)*K*N, cudaMemcpyHostToDevice);
-    cudaMemcpy(dC,C,sizeof(float)*N*M, cudaMemcpyHostToDevice);
 
     dim3 threads(Tx,Ty);
     dim3 blocks( (M+threads.x-1)/threads.x, (N+threads.y-1)/threads.y);
@@ -73,15 +56,11 @@ int main(int argc, char *argv[]){
 
     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
-    for(i=0;i<M;i++){
-        for(j=0;j<N;j++){
-            temp = 0;
-            for(k=0;k<K;k++){
-                temp += A[ IDX(i,k,M,K) ] * B[ IDX(k,j,K,N) ];
-            }
-            error += abs(C[ IDX(i,j,M,N) ]-temp);
-        }
-    }
+#ifdef CHECK
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR) 
+            ? "Correct!!" : "Wrong Answer!") << std::endl;
+#endif
+
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dC);
@@ -90,7 +69,6 @@ int main(int argc, char *argv[]){
     free(B);
     free(C);
 
-    printf("%f\n",error);
     printf("%f\n",ms);
     return 0;
 }
