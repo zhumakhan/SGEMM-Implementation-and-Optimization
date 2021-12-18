@@ -95,6 +95,7 @@ int main(int argc, char *argv[]) {
     free(a);
     free(b);
     free(c);
+    printf("%f\n",ms);
     return 0;
 }
     
