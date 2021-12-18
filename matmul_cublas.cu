@@ -1,6 +1,8 @@
 #include "utils.cpp"
-#include "cublas_v2.h"
+#include <cublas.h>
+#include <cublas_api.h>
 #include <cuda_runtime.h>
+#include <cublas_v2.h>
 
 int main(int argc, char *argv[]) {
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
