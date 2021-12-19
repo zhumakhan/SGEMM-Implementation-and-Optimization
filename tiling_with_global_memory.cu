@@ -1,8 +1,6 @@
 #include "utils.cpp"
 #include <stdio.h>
 
-#define IDXR(i,j,row,col) (i*col+j)
-#define IDXC(i,j,row,col) (i+j*row)
 #define Tx 1
 #define Ty 64 //max value for Tx * Ty is 1024
 
@@ -13,7 +11,7 @@ int main(int argc, char *argv[]){
     printf("M=%d K=%d N=%d\n",M,K,N);
 
     float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
-    float *B = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR,-50,50);
+    float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
     float *C = (float*)malloc(sizeof(float)*M*N);
     
     float ms;
@@ -52,7 +50,7 @@ int main(int argc, char *argv[]){
     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
 #ifdef CHECK
-    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR) 
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
             ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 
@@ -73,7 +71,7 @@ __global__ void mmGlobal(float *A, float *B, float *C, int M, int K, int N){
     float temp = 0;
     if(i < M and j < N){
         for(int k = 0; k < K; ++k){
-          temp += A[ IDXR(i,k,M,K) ] * B[ IDXC(k,j,K,N) ];
+          temp += A[ IDXR(i,k,M,K) ] * B[ IDXR(k,j,K,N) ];
       }
       C[ IDXR(i,j,M,N) ]=temp;
     }
