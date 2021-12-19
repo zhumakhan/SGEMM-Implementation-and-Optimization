@@ -89,12 +89,14 @@ int main(int argc, char *argv[]) {
     utils::print_mat_gpu(c, M, N, utils::COLUMN_MAJOR);
 #endif
 
+    cublasDestroy(handle);
     cudaFree(dev_a);
     cudaFree(dev_b);
     cudaFree(dev_c);
     free(a);
     free(b);
     free(c);
+    
     printf("%f\n",ms);
     return 0;
 }

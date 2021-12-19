@@ -104,12 +104,12 @@ void print_mat(T** mat, int row, int col) {
 }
 
 template <typename T>
-bool check_sum(T* a, T* b, T* c, int row, int col, int order_type) {
+bool check_sum(T* a, T* b, T* c, int row, int col, int order_type_a, int order_type_b, int order_type_c) {
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-	    	if (a[ IDX(i,j,row,col,order_type) ] + b[ IDX(i,j,row,col,order_type) ] != c[ IDX(i,j,row,col,order_type) ]) {
-				std::cout << a[ IDX(i,j,row,col,order_type) ] << " " << b[ IDX(i,j,row,col,order_type) ] << " "
-				 << c[ IDX(i,j,row,col,order_type) ] << std::endl;
+	    	if (a[ IDX(i,j,row,col,order_type_a) ] + b[ IDX(i,j,row,col,order_type_b) ] != c[ IDX(i,j,row,col,order_type_c) ]) {
+				std::cout << a[ IDX(i,j,row,col,order_type_a) ] << " " << b[ IDX(i,j,row,col,order_type_b) ] << " "
+				 << c[ IDX(i,j,row,col,order_type_c) ] << std::endl;
 				return false;
 	    	}
 		}
@@ -118,7 +118,7 @@ bool check_sum(T* a, T* b, T* c, int row, int col, int order_type) {
 }
 
 template <typename T>
-bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type) {
+bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type_a, int order_type_b, int order_type_c) {
     /* Check if the result of matrix multiplication is right.*/
     std::cout<<std::setprecision(6);
     T value = 0;
@@ -126,10 +126,10 @@ bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type) {
 	    for (int j = 0; j < N; ++j) {
             value = 0;
             for (int k = 0; k < K; ++k) {
-                value += a[ IDX(i, k, M, K, order_type) ] * b[ IDX(k, j, K, N, order_type) ];
+                value += a[ IDX(i, k, M, K, order_type_a) ] * b[ IDX(k, j, K, N, order_type_b) ];
             }
-            if ( fabs(value - c[ IDX(i, j, M, N, order_type) ] ) > 0.1) {
-                std::cout << c[ IDX(i, j, M, N, order_type) ] << " " << value << std::endl;
+            if ( fabs(value - c[ IDX(i, j, M, N, order_type_c) ] ) > 0.1) {
+                std::cout << c[ IDX(i, j, M, N, order_type_c) ] << " " << value << std::endl;
                 return false;
             }
         }
