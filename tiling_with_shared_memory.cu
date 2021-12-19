@@ -84,7 +84,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     int ii = threadIdx.x;
     int jj = threadIdx.y;
     
-    printf("%d %d\n",ii,jj);
+    printf("i=%d j=%d  ii=%d jj=%d\n",i,j,ii,jj);
   
     __shared__ float sA[BS][BS], sB[BS][BS];
 
