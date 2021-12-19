@@ -53,7 +53,14 @@ int main(int argc, char *argv[]){
     std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
             ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
-
+#ifdef DEBUG
+    std::cout << "Matrix A:" << std::endl;
+    utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
+    std::cout << "Matrix B:" << std::endl;
+    utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
+    std::cout << "Matrix C:" << std::endl;
+    utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
+#endif
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dC);

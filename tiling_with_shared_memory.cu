@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 
-#define BS 16 //keep BS*BS <= 1024
+#define BS 16
 
 __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N);
 
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 
     cudaMalloc((void**)&dA,sizeof(float)*M*K);
     cudaMalloc((void**)&dB,sizeof(float)*K*N);
-    cudaMalloc((void**)&dC,sizeof(float)*N*M);
+    cudaMalloc((void**)&dC,sizeof(float)*M*N);
 
     cudaMemcpy(dA,A,sizeof(float)*M*K, cudaMemcpyHostToDevice);
     cudaMemcpy(dB,B,sizeof(float)*K*N, cudaMemcpyHostToDevice);
@@ -44,14 +44,21 @@ int main(int argc, char *argv[]){
     if(cuda_error != cudaSuccess)
     {
       printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
-      exit(-1);
     }
 
-    cudaMemcpy(C, dC, sizeof(float)*N*M, cudaMemcpyDeviceToHost);
+    cudaMemcpy(C, dC, sizeof(float)*M*N, cudaMemcpyDeviceToHost);
 
 #ifdef CHECK
     std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
             ? "Correct!!" : "Wrong Answer!") << std::endl;
+#endif
+#ifdef DEBUG
+    std::cout << "Matrix A:" << std::endl;
+    utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
+    std::cout << "Matrix B:" << std::endl;
+    utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
+    std::cout << "Matrix C:" << std::endl;
+    utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
 #endif
 
     cudaFree(dA);
@@ -94,6 +101,5 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
         }
         __syncthreads();
     }
-
     C[ IDXR(i,j,M,N) ] = temp;
 }
