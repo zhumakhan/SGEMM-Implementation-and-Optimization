@@ -98,6 +98,8 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
 
          for(m=0; m < BS and k+m < K; ++m){
             temp += sA[ii][m] * sB[m][jj];
+            if(i == 0 and j == 0)
+                printf("%d\n",k+m);
         }
         __syncthreads();
     }
