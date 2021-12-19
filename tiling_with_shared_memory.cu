@@ -1,12 +1,6 @@
+#include "utils.cpp"
 #include <stdio.h>
 
-// #define N 512
-// #define P 256
-// #define M 128
-
-#define N 1024
-#define P 512
-#define M 256
 
 #define BS 16 //keep BS*BS <= 1024
 
