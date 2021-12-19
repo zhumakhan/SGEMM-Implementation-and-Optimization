@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 
     cudaMemcpy(c, dev_c, M*N*sizeof(float), cudaMemcpyDeviceToHost);
 #ifdef CHECK
-    std::cout << (utils::check_mul<float>(a, b, c, M, K, N, utils::COLUMN_MAJOR) 
+    std::cout << (utils::check_mul<float>(a, b, c, M, K, N, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR) 
 		    ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 #ifdef DEBUG
