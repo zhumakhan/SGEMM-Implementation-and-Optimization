@@ -3,6 +3,7 @@
 
 
 #define BS 16
+#define TILE_SIZE 16
 
 __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N);
 
@@ -74,36 +75,66 @@ int main(int argc, char *argv[]){
 }
 
 __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
+    // int i = threadIdx.x + blockIdx.x * blockDim.x;
+    // int j = threadIdx.y + blockIdx.y * blockDim.y;
 
-    if( i >= M or j >= N){
-        return;
-    }
+    // if( i >= M or j >= N){
+    //     return;
+    // }
 
-    int ii = threadIdx.x;
-    int jj = threadIdx.y;
+    // int ii = threadIdx.x;
+    // int jj = threadIdx.y;
 
   
-    __shared__ float sA[BS][BS], sB[BS][BS];
+    // __shared__ float sA[BS][BS], sB[BS][BS];
 
-    float temp = 0;
-    int k,m;
+    // float temp = 0;
+    // int k,m;
 
-    for(k = 0; k < K; k += BS){
-        sA[ii][jj] = k+jj < K ? A[ IDXR(i,k + jj, M, K) ] : 0;
-        sB[jj][ii] = k+ii < K ? B[ IDXR(k + ii,j, K, N) ] : 0;
+    // for(k = 0; k < K; k += BS){
+    //     sA[ii][jj] = k+jj < K ? A[ IDXR(i,k + jj, M, K) ] : 0;
+    //     sB[jj][ii] = k+ii < K ? B[ IDXR(k + ii,j, K, N) ] : 0;
+        
+    //     __syncthreads();
+
+    //      for(m=0; m < BS and k+m < K; ++m){
+    //         temp += sA[ii][m] * sB[m][jj];
+    //         if(i == 0 and j == 0)
+    //             printf("%d\n",k+m);
+    //     }
+    //     __syncthreads();
+    // }
+    // C[ IDXR(i,j,M,N) ] = temp;
+
+    int bx = blockIdx.x, by = blockIdx.y;
+    int tx = threadIdx.x, ty = threadIdx.y;
+
+    __shared__ T As[TILE_SIZE][TILE_SIZE];
+    __shared__ T Bs[TILE_SIZE][TILE_SIZE];
+
+    int aBegin = K * TILE_SIZE * by;
+    int aEnd = aBegin + K - 1;
+    int aStep = TILE_SIZE;
+
+    int bBegin = TILE_SIZE * bx;
+    int bStep = TILE_SIZE * N;
+
+    T Csub = 0;
+
+    for (int i = aBegin, j = bBegin; i <= aEnd; i += aStep, j += bStep) {
+        As[ty][tx] = A[i + K * ty + tx];
+        Bs[tx][ty] = B[j + N * tx + ty];
+
+        __syncthreads();
+
+        for (int k = 0; k < TILE_SIZE; ++k) {
+            Csub += As[ty][k]*Bs[k][tx];
+        }
         
         __syncthreads();
-
-         for(m=0; m < BS and k+m < K; ++m){
-            temp += sA[ii][m] * sB[m][jj];
-            if(i == 0 and j == 0)
-                printf("%d\n",k+m);
-        }
-        __syncthreads();
     }
-    C[ IDXR(i,j,M,N) ] = temp;
+    int cIdx = N * TILE_SIZE * by + TILE_SIZE * bx;
+    C[cIdx + N * ty + tx] = Csub;
 }
 
 
