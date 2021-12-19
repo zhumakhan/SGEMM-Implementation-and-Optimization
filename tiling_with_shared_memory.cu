@@ -10,51 +10,35 @@
 
 #define BS 16 //keep BS*BS <= 1024
 
-__global__ void mmShared(float A[N][P], float B[P][M], float C[N][M]);
+__global__ void mmShared(float *A, float *B, float *C, int M, int K, int N);
 
 int main(){
+    int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
+    printf("M=%d K=%d N=%d\n",M,K,N);
+
+    float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
+    float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
+    float *C = (float*)malloc(sizeof(float)*M*N);
     
     float ms;
-    float error = 0.0f;
-    float temp;
+    float *dA, *dB, *dC;
 
-    float A[N][P];
-    float B[P][M];
-    float C[N][M];
-    
-    float (*dA)[P];
-    float (*dB)[M];
-    float (*dC)[M];
-    
-    int i,j,k;
+    cudaMalloc((void**)&dA,sizeof(float)*M*K);
+    cudaMalloc((void**)&dB,sizeof(float)*K*N);
+    cudaMalloc((void**)&dC,sizeof(float)*N*M);
 
-    for(i=0;i<N;i++){
-        for(j=0;j<P;j++){
-            A[i][j]=i-j;
-        }
-    }
-    for(i=0;i<P;i++){
-        for(j=0;j<M;j++){
-            B[i][j]=i+j;
-        }
-    }
-    cudaMalloc(&dA,sizeof(float)*N*P);
-    cudaMalloc(&dB,sizeof(float)*P*M);
-    cudaMalloc(&dC,sizeof(float)*N*M);
-
-    cudaMemcpy(dA,A,sizeof(float)*N*P, cudaMemcpyHostToDevice);
-    cudaMemcpy(dB,B,sizeof(float)*P*M, cudaMemcpyHostToDevice);
-    cudaMemcpy(dC,C,sizeof(float)*N*M, cudaMemcpyHostToDevice);
+    cudaMemcpy(dA,A,sizeof(float)*M*K, cudaMemcpyHostToDevice);
+    cudaMemcpy(dB,B,sizeof(float)*K*N, cudaMemcpyHostToDevice);
 
     dim3 threads(BS,BS);
-    dim3 blocks( (N+threads.x-1)/threads.x, (M+threads.y-1)/threads.y);
+    dim3 blocks( (M+threads.x-1)/threads.x, (N+threads.y-1)/threads.y);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
     
-    mmShared<<<blocks,threads>>>(dA,dB,dC);
+    mmShared<<<blocks,threads>>>(dA,dB,dC,M,K,N);
 
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
@@ -71,30 +55,28 @@ int main(){
 
     cudaMemcpy(C, dC, sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
+#ifdef CHECK
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
+            ? "Correct!!" : "Wrong Answer!") << std::endl;
+#endif
+
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dC);
 
-    for(i=0;i<N;i++){
-        for(j=0;j<M;j++){
-            temp = 0;
-            for(k=0;k<P;k++){
-                temp += A[i][k] * B[k][j];
-            }
-            error += abs(C[i][j]-temp);
-        }
-    }
-    printf("%f\n",error);
+    free(A);
+    free(B);
+    free(C);
+
     printf("%f\n",ms);
-    printf("%f\n",(float)(sizeof(float)*(N*M*P/BS * 2 + N*M))/1.0e6/ms);
     return 0;
 }
 
-__global__ void mmShared(float A[N][P], float B[P][M], float C[N][M]){
+__global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
 
-    if( i >= N or j >= M){
+    if( i >= M or j >= N){
         return;
     }
 
@@ -107,17 +89,17 @@ __global__ void mmShared(float A[N][P], float B[P][M], float C[N][M]){
     float temp = 0;
     int k,m;
 
-    for(k = 0; k < P/BS; k++){
-        sA[ii][jj] = A[i][k*BS + jj];
-        sB[ii][jj] = B[k*BS + ii][j];
+    for(k = 0; k < K/BS; ++k){
+        sA[ii][jj] = A[ IDXR(i,k*BS + jj, M, K) ];
+        sB[ii][jj] = B[ IDXR(k*BS + ii,j, K, N) ];
         
         __syncthreads();
 
-         for(m=0; m < BS; m++){
+         for(m=0; m < BS; ++m){
             temp += sA[ii][m] * sB[m][jj];
         }
         __syncthreads();
     }
 
-    C[i][j] = temp;
+    C[ IDXR(i,j,M,N) ] = temp;
 }
