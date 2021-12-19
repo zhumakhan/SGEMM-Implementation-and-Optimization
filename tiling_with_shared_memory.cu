@@ -12,7 +12,7 @@
 
 __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N);
 
-int main(){
+int main(int argc, char *argv[]){
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
     printf("M=%d K=%d N=%d\n",M,K,N);
 
