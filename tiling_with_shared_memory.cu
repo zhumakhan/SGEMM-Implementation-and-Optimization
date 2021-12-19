@@ -54,11 +54,11 @@ int main(int argc, char *argv[]){
 #endif
 #ifdef DEBUG
     std::cout << "Matrix A:" << std::endl;
-    utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
+    utils::print_mat_gpu(A, M, K, utils::ROW_MAJOR);
     std::cout << "Matrix B:" << std::endl;
-    utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
+    utils::print_mat_gpu(B, K, N, utils::ROW_MAJOR);
     std::cout << "Matrix C:" << std::endl;
-    utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
+    utils::print_mat_gpu(C, M, N, utils::ROW_MAJOR);
 #endif
 
     cudaFree(dA);
