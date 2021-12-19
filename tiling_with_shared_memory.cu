@@ -90,9 +90,9 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     float temp = 0;
     int k,m;
 
-    for(k = 0; k < K/BS; ++k){
-        sA[ii][jj] = A[ IDXR(i,k*BS + jj, M, K) ];
-        sB[ii][jj] = B[ IDXR(k*BS + ii,j, K, N) ];
+    for(k = 0; k < K; k += BS){
+        sA[ii][jj] = A[ IDXR(i,k + jj, M, K) ];
+        sB[ii][jj] = B[ IDXR(k + ii,j, K, N) ];
         
         __syncthreads();
 
