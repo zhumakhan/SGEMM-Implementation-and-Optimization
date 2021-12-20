@@ -107,7 +107,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     //     __syncthreads();
     }
     if(prev != K-1)printf("%d %d\n",i,j);
-    printf("%d ",count);
+    if(count != K)printf("%d ",count);
     // C[ IDXR(i,j,M,N) ] = temp;
 }
 
