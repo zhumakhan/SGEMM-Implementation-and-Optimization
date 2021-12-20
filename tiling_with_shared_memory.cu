@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
     cudaMemcpy(C, dC, sizeof(float)*M*N, cudaMemcpyDeviceToHost);
 
 #ifdef CHECK
-    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR) 
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR) 
             ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 #ifdef DEBUG
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
     std::cout << "Matrix B:" << std::endl;
     utils::print_mat_gpu(B, K, N, utils::COLUMN_MAJOR);
     std::cout << "Matrix C:" << std::endl;
-    utils::print_mat_gpu(C, M, N, utils::ROW_MAJOR);
+    utils::print_mat_gpu(C, M, N, utils::COLUMN_MAJOR);
 #endif
 
     cudaFree(dA);
@@ -98,7 +98,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
         }
         __syncthreads();
     }
-    C[ IDXR(i,j,M,N) ] = temp;
+    C[ IDXC(i,j,M,N) ] = temp;
 }
 
 
