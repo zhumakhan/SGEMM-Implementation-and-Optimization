@@ -91,13 +91,13 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     int k,m;
 
     for(k = 0; k < K; k += BS){
-        sA[ii][jj] = A[ IDXR(i,k+jj, M, K) ];
-        sB[ii][jj] = B[ IDXC(k+ii,j, K, N) ];
+        sA[threadIdx.x][jj] = A[ IDXR(i,k+jj, M, K) ];
+        sB[threadIdx.x][jj] = B[ IDXC(k+threadIdx.x,j, K, N) ];
         
         __syncthreads();
 
          for(m = 0; m < BS and k+m < K; m += 1){
-            temp += sA[ii][m] * sB[m][jj];
+            temp += sA[threadIdx.x][m] * sB[m][jj];
         }
         __syncthreads();
     }
