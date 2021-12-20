@@ -73,6 +73,8 @@ int main(int argc, char *argv[]) {
 	int K = std::atoi(argv[2]);
 	int N = std::atoi(argv[3]);
 
+	printf("M=%d K=%d N=%d\n",M,K,N);
+
 	dim3 threads(TILE_SIZE, VECTOR_SIZE);
 	dim3 grid(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
 
@@ -80,6 +82,7 @@ int main(int argc, char *argv[]) {
 	float *b = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR);
 	float *c = (float*)malloc(sizeof(float)*M*N);
 
+	float ms;
 	float *dev_a, *dev_b, *dev_c;
 
 	cudaMalloc((void**)&dev_a, M*K*sizeof(float));
@@ -88,8 +91,25 @@ int main(int argc, char *argv[]) {
 
 	cudaMemcpy(dev_a, a, M*K*sizeof(float), cudaMemcpyHostToDevice);	
 	cudaMemcpy(dev_b, b, K*N*sizeof(float), cudaMemcpyHostToDevice);
+
+	cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
 	
 	matmul_CompOpt<float><<<grid, threads>>>(dev_a, dev_b, dev_c, M, K, N);
+
+	cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&ms, start, stop);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+
+    cudaError_t cuda_error = cudaGetLastError();
+    if(cuda_error != cudaSuccess)
+    {
+      printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
+    }
 
 	cudaMemcpy(c, dev_c, M*N*sizeof(float), cudaMemcpyDeviceToHost);
 #ifdef CHECK
@@ -111,6 +131,9 @@ int main(int argc, char *argv[]) {
     free(a);
     free(b);
     free(c);
+
+    printf("%f\n",ms);
+    
 	return 0;
 }
 
