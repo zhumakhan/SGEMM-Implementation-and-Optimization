@@ -5,11 +5,11 @@
 #include <cmath>
 
 #ifndef IDXR
-#define IDXR(i,j,row,col) (i*col+j)
+#define IDXR(i,j,row,col) (((i)*(col))+(j))
 #endif
 
 #ifndef IDXC
-#define IDXC(i,j,row,col) (j*row+i)
+#define IDXC(i,j,row,col) (((j)*(row))+(i))
 #endif
 
 namespace utils {
