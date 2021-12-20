@@ -85,10 +85,10 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     int jj = threadIdx.y;
 
   
-    // __shared__ float sA[BS][BS], sB[BS][BS];
+    __shared__ float sA[BS][BS], sB[BS][BS];
 
     float temp = 0;
-    int k,m,t;
+    int k,m;
 
     for(k = 0; k < K; k += BS){
         sA[ii][jj] = A[ IDXR(i,k+jj, M, K) ];
