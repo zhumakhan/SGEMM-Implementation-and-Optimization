@@ -11,7 +11,7 @@ int main(int argc, char *argv[]){
     printf("M=%d K=%d N=%d\n",M,K,N);
 
     float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
-    float *B = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR,-50,50);
+    float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
     float *C = (float*)malloc(sizeof(float)*M*N);
     
     float ms;
@@ -50,14 +50,14 @@ int main(int argc, char *argv[]){
     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
 #ifdef CHECK
-    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR) 
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
             ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 #ifdef DEBUG
     std::cout << "Matrix A:" << std::endl;
     utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
     std::cout << "Matrix B:" << std::endl;
-    utils::print_mat_gpu(b, K, N, utils::COLUMN_MAJOR);
+    utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
     std::cout << "Matrix C:" << std::endl;
     utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
 #endif
@@ -78,7 +78,7 @@ __global__ void mmGlobal(float *A, float *B, float *C, int M, int K, int N){
     float temp = 0;
     if(i < M and j < N){
         for(int k = 0; k < K; ++k){
-          temp += A[ IDXR(i,k,M,K) ] * B[ IDXC(k,j,K,N) ];
+          temp += A[ IDXR(i,k,M,K) ] * B[ IDXR(k,j,K,N) ];
       }
       C[ IDXR(i,j,M,N) ]=temp;
     }
