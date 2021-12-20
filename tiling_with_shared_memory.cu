@@ -102,7 +102,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     //         temp += sA[ii][m] * sB[m][jj];
     //     }
     //     __syncthreads();
-    // }
+    }
     // C[ IDXR(i,j,M,N) ] = temp;
 }
 
