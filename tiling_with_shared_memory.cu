@@ -86,7 +86,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     int jj = threadIdx.y;
 
   
-    __shared__ float sA[BS][BS], sB[BS][BS];
+    // __shared__ float sA[BS][BS], sB[BS][BS];
 
     float temp = 0;
     int k,m;
@@ -98,7 +98,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
         // sB[ii][jj] = B[ IDXR(k+ii,j, K, N) ];
         
     //     __syncthreads();
-         for(m=0; m < BS and k+m < K; ++m){
+         for(m = 0; m < BS and k+m < K; ++m){
             // temp += sA[ii][m] * sB[m][jj];
             C[ IDXR(i,j,M,N) ] += A[ IDXR(i,k+m, M, K) ] *  B[ IDXR(k+m,j, K, N) ];
             if(k+m == prev+1)prev = k+m;
