@@ -89,7 +89,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     __shared__ float sA[BS][BS], sB[BS][BS];
 
     float temp = 0;
-    int k,m;
+    int k,kk,m;
 
     for(k = 0, kk = 0; k < K and kk < K; k += 1, kk += BS){
         // sA[ii][jj] = A[ IDXR(i,k+jj, M, K) ];
