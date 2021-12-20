@@ -99,7 +99,8 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     //     __syncthreads();
          for(m = 0; m < BS and k+m < K; m += 1){
             // temp += sA[ii][m] * sB[m][jj];
-            C[ IDXR(i,j,M,N) ] += A[ IDXR(i,k+m, M, K) ] *  B[ IDXR(k+m,j, K, N) ];
+            int t = k+m;
+            C[ IDXR(i,j,M,N) ] += A[ IDXR(i,t, M, K) ] *  B[ IDXR(t,j, K, N) ];
             if(k+m == prev+1)prev++;
             count++;
         }
