@@ -41,6 +41,7 @@ __global__ void matmul_Tiling(T *A, T *B, T *C, int M, int K, int N) {
 
 int main(int argc, char *argv[]) {
 	int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
+	printf("M=%d K=%d N=%d\n",M,K,N);
 
 	dim3 threads(TILE_SIZE, TILE_SIZE);
 	dim3 grid(N / TILE_SIZE, M / TILE_SIZE);
