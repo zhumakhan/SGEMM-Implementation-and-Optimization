@@ -50,16 +50,16 @@ int main(int argc, char *argv[]){
     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
 
 #ifdef CHECK
-    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::COLUMN_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::COLUMN_MAJOR, utils::ROW_MAJOR, utils::COLUMN_MAJOR) 
             ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 #ifdef DEBUG
     std::cout << "Matrix A:" << std::endl;
-    utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
+    utils::print_mat_gpu(a, M, K, utils::COLUMN_MAJOR);
     std::cout << "Matrix B:" << std::endl;
     utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
     std::cout << "Matrix C:" << std::endl;
-    utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
+    utils::print_mat_gpu(c, M, N, utils::COLUMN_MAJOR);
 #endif
     cudaFree(dA);
     cudaFree(dB);
@@ -80,6 +80,6 @@ __global__ void mmGlobal(float *A, float *B, float *C, int M, int K, int N){
         for(int k = 0; k < K; ++k){
           temp += A[ IDXC(i,k,M,K) ] * B[ IDXR(k,j,K,N) ];
       }
-      C[ IDXR(i,j,M,N) ]=temp;
+      C[ IDXC(i,j,M,N) ]=temp;
     }
 }
