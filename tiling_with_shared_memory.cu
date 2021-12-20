@@ -11,7 +11,7 @@ int main(int argc, char *argv[]){
     printf("M=%d K=%d N=%d\n",M,K,N);
 
     float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
-    float *B = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR,-50,50);
+    float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
     float *C = (float*)malloc(sizeof(float)*M*N);
     
     float ms;
@@ -49,14 +49,14 @@ int main(int argc, char *argv[]){
     cudaMemcpy(C, dC, sizeof(float)*M*N, cudaMemcpyDeviceToHost);
 
 #ifdef CHECK
-    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR) 
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
             ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 #ifdef DEBUG
     std::cout << "Matrix A:" << std::endl;
     utils::print_mat_gpu(A, M, K, utils::ROW_MAJOR);
     std::cout << "Matrix B:" << std::endl;
-    utils::print_mat_gpu(B, K, N, utils::COLUMN_MAJOR);
+    utils::print_mat_gpu(B, K, N, utils::ROW_MAJOR);
     std::cout << "Matrix C:" << std::endl;
     utils::print_mat_gpu(C, M, N, utils::ROW_MAJOR);
 #endif
@@ -85,13 +85,11 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     __shared__ float sA[BS][BS], sB[BS][BS];
 
     float temp = 0;
-    int k,m,x,y;
+    int k,m;
 
     for(k = 0; k < K; k += BS){
-        y = k+threadIdx.y;
-        x = k+threadIdx.x;
-        sA[threadIdx.x][threadIdx.y] = A[ IDXR(i,y, M, K) ];
-        sB[threadIdx.x][threadIdx.y] = B[ IDXC(x,j, K, N) ];
+        sA[threadIdx.x][threadIdx.y] = A[ IDXR(i,k+threadIdx.y, M, K) ];
+        sB[threadIdx.x][threadIdx.y] = B[ IDXR(k+threadIdx.x,j, K, N) ];
         
         __syncthreads();
 
