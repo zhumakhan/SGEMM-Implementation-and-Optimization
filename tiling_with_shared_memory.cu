@@ -89,9 +89,9 @@ int main(int argc, char *argv[]){
     dim3 threads(BS,BS);
     dim3 blocks( (N+threads.x-1)/threads.x, (M+threads.y-1)/threads.y);
 
-    test(&mmShared, threads, blocks, A, B, C, dA, dB, dC, M, K, N, a_major, b_major, c_major);
-    test(&mmSharedRR, threads, blocks, A, B, C, dA, dB, dC, M, K, N, a_major, b_major, c_major);
-    test(&mmSharedRC, threads, blocks, A, B, C, dA, dB, dC, M, K, N, a_major, b_major, c_major);
+    // test(&mmShared, threads, blocks, A, B, C, dA, dB, dC, M, K, N, a_major, b_major, c_major);
+    // test(&mmSharedRR, threads, blocks, A, B, C, dA, dB, dC, M, K, N, a_major, b_major, c_major);
+    // test(&mmSharedRC, threads, blocks, A, B, C, dA, dB, dC, M, K, N, a_major, b_major, c_major);
 
     cudaFree(dA);
     cudaFree(dB);
