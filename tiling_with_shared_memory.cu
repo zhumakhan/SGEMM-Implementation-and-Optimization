@@ -5,10 +5,10 @@
 #define BS 16
 #define TILE_SIZE 16
 
-// void test(void (*kernel)(float *, float *, float *, int, int, int),
-//     dim3 threads, dim3 blocks, float *A, float *B, float *C,
-//     float *dA, foat *dB, float *dC, int M, int N, int K, 
-//     int a_major, int b_major, int c_major){
+void test(void (*kernel)(float *, float *, float *, int, int, int),
+    dim3 threads, dim3 blocks, float *A, float *B, float *C,
+    float *dA, foat *dB, float *dC, int M, int N, int K, 
+    int a_major, int b_major, int c_major){
 //     float ms;
 //     cudaEvent_t start, stop;
 //     cudaEventCreate(&start);
@@ -45,7 +45,7 @@
 // #endif
 //     printf("%f ms\n", ms);
 
-// }
+}
 __global__ void mmShared(float *, float *, float *, int, int, int);
 __global__ void mmSharedRR(float *, float *, float *, int, int, int);
 __global__ void mmSharedRC(float *, float *, float *, int, int, int);
@@ -64,7 +64,7 @@ void fun(void (*func)(float*)){
 int main(int argc, char *argv[]){
     void    (*ptr)(float *) = &solve;
     fun(ptr);
-    
+
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
     printf("M=%d K=%d N=%d\n",M,K,N);
     
@@ -76,7 +76,6 @@ int main(int argc, char *argv[]){
     float *B = utils::random_matrix_gpu<float>(K, N, b_major,-50,50);
     float *C = (float*)malloc(sizeof(float)*M*N);
     
-    float ms;
     float *dA, *dB, *dC;
 
     cudaMalloc((void**)&dA,sizeof(float)*M*K);
@@ -100,8 +99,6 @@ int main(int argc, char *argv[]){
     free(A);
     free(B);
     free(C);
-
-    printf("%f\n",ms);
     return 0;
 }
 
