@@ -5,14 +5,18 @@
 #define BS 16
 #define TILE_SIZE 16
 
-void test(void (*kernel)(float *, float *, float *, int, int, int), dim3 &threads, dim3 &blocks, float *A, float *B, float *C, int M, int N, int K, int a_major, int b_major, int c_major){
+void test(
+    void (*kernel)(float *, float *, float *, int, int, int),
+    dim3 &threads, dim3 &blocks, float *A, float *B, float *C,
+    float *dA, foat *dB, float *dC, int M, int N, int K, 
+    int a_major, int b_major, int c_major){
     float ms;
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
     
-    (*kernel)<<<blocks,threads>>>(A,B,C,M,K,N);
+    (*kernel)<<<blocks,threads>>>(dA,dB,dC,M,K,N);
 
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
