@@ -3,6 +3,7 @@
 
 
 #define BS 16
+#define TILE_SIZE 16
 
 __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N);
 
@@ -102,8 +103,8 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
         int bx = blockIdx.x, by = blockIdx.y;
     int tx = threadIdx.x, ty = threadIdx.y;
 
-    __shared__ T As[TILE_SIZE][TILE_SIZE];
-    __shared__ T Bs[TILE_SIZE][TILE_SIZE];
+    __shared__ float As[TILE_SIZE][TILE_SIZE];
+    __shared__ float Bs[TILE_SIZE][TILE_SIZE];
 
     int aBegin = K * TILE_SIZE * by;
     int aEnd = aBegin + K - 1;
@@ -128,7 +129,6 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     }
     int cIdx = N * TILE_SIZE * by + TILE_SIZE * bx;
     C[cIdx + N * ty + tx] = Csub;
-}
 }
 
 
