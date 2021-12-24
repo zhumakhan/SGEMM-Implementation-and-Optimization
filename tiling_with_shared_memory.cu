@@ -113,7 +113,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     int bBegin = TILE_SIZE * bx;
     int bStep = TILE_SIZE * N;
 
-    T Csub = 0;
+    float Csub = 0;
 
     for (int i = aBegin, j = bBegin; i <= aEnd; i += aStep, j += bStep) {
         As[ty][tx] = A[i + K * ty + tx];
