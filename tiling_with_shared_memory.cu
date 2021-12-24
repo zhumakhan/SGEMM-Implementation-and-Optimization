@@ -52,7 +52,19 @@ __global__ void mmSharedRC(float *, float *, float *, int, int, int);
 __global__ void mmSharedCR(float *, float *, float *, int, int, int);
 __global__ void mmSharedCC(float *, float *, float *, int, int, int);
 
+void solve(float * a){ 
+    printf("%f \n",*a);
+   
+}
+void fun(void (*func)(float*)){
+    float a = 10;
+    (*func)(&a);
+}
+
 int main(int argc, char *argv[]){
+    void    (*ptr)(float *) = &solve;
+    fun(ptr);
+    
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
     printf("M=%d K=%d N=%d\n",M,K,N);
     
