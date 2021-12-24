@@ -10,9 +10,13 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N);
 int main(int argc, char *argv[]){
     int M = std::atoi(argv[1]), K = std::atoi(argv[2]), N = std::atoi(argv[3]);
     printf("M=%d K=%d N=%d\n",M,K,N);
+    
+    int a_major = utils::ROW_MAJOR;
+    int b_major = utils::ROW_MAJOR;
+    int c_major = utils::ROW_MAJOR;
 
-    float *A = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR,-50,50);
-    float *B = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR,-50,50);
+    float *A = utils::random_matrix_gpu<float>(M, K, a_major,-50,50);
+    float *B = utils::random_matrix_gpu<float>(K, N, b_major,-50,50);
     float *C = (float*)malloc(sizeof(float)*M*N);
     
     float ms;
@@ -50,16 +54,16 @@ int main(int argc, char *argv[]){
     cudaMemcpy(C, dC, sizeof(float)*M*N, cudaMemcpyDeviceToHost);
 
 #ifdef CHECK
-    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR) 
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, a_major, b_major, c_major) 
             ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 #ifdef DEBUG
     std::cout << "Matrix A:" << std::endl;
-    utils::print_mat_gpu(A, M, K, utils::COLUMN_MAJOR);
+    utils::print_mat_gpu(A, M, K, a_major);
     std::cout << "Matrix B:" << std::endl;
-    utils::print_mat_gpu(B, K, N, utils::COLUMN_MAJOR);
+    utils::print_mat_gpu(B, K, N, b_major);
     std::cout << "Matrix C:" << std::endl;
-    utils::print_mat_gpu(C, M, N, utils::ROW_MAJOR);
+    utils::print_mat_gpu(C, M, N, c_major);
 #endif
 
     cudaFree(dA);
@@ -100,7 +104,7 @@ __global__ void mmShared(float *A, float *B, float *C, int M, int K, int N){
     //     __syncthreads();
     // }
     // C[ IDXR(i,j,M,N) ] = temp;
-        int bx = blockIdx.x, by = blockIdx.y;
+    int bx = blockIdx.x, by = blockIdx.y;
     int tx = threadIdx.x, ty = threadIdx.y;
 
     __shared__ float As[TILE_SIZE][TILE_SIZE];
