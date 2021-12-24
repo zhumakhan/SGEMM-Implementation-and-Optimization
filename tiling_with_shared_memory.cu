@@ -5,47 +5,47 @@
 #define BS 16
 #define TILE_SIZE 16
 
-void test(void (*kernel)(float *, float *, float *, int, int, int),
-    dim3 threads, dim3 blocks, float *A, float *B, float *C,
-    float *dA, foat *dB, float *dC, int M, int N, int K, 
-    int a_major, int b_major, int c_major){
-    float ms;
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start);
+// void test(void (*kernel)(float *, float *, float *, int, int, int),
+//     dim3 threads, dim3 blocks, float *A, float *B, float *C,
+//     float *dA, foat *dB, float *dC, int M, int N, int K, 
+//     int a_major, int b_major, int c_major){
+//     float ms;
+//     cudaEvent_t start, stop;
+//     cudaEventCreate(&start);
+//     cudaEventCreate(&stop);
+//     cudaEventRecord(start);
     
-    (*kernel)<<<blocks,threads>>>(dA,dB,dC,M,K,N);
+//     (*kernel)<<<blocks,threads>>>(dA,dB,dC,M,K,N);
 
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&ms, start, stop);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
+//     cudaEventRecord(stop);
+//     cudaEventSynchronize(stop);
+//     cudaEventElapsedTime(&ms, start, stop);
+//     cudaEventDestroy(start);
+//     cudaEventDestroy(stop);
 
-    cudaError_t cuda_error = cudaGetLastError();
-    if(cuda_error != cudaSuccess)
-    {
-      printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
-    }
+//     cudaError_t cuda_error = cudaGetLastError();
+//     if(cuda_error != cudaSuccess)
+//     {
+//       printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
+//     }
 
-    cudaMemcpy(C, dC, sizeof(float)*M*N, cudaMemcpyDeviceToHost);
+//     cudaMemcpy(C, dC, sizeof(float)*M*N, cudaMemcpyDeviceToHost);
 
-#ifdef CHECK
-    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, a_major, b_major, c_major) 
-            ? "Correct!!" : "Wrong Answer!") << std::endl;
-#endif
-#ifdef DEBUG
-    std::cout << "Matrix A:" << std::endl;
-    utils::print_mat_gpu(A, M, K, a_major);
-    std::cout << "Matrix B:" << std::endl;
-    utils::print_mat_gpu(B, K, N, b_major);
-    std::cout << "Matrix C:" << std::endl;
-    utils::print_mat_gpu(C, M, N, c_major);
-#endif
-    printf("%f ms\n", ms);
+// #ifdef CHECK
+//     std::cout << (utils::check_mul<float>(A, B, C, M, K, N, a_major, b_major, c_major) 
+//             ? "Correct!!" : "Wrong Answer!") << std::endl;
+// #endif
+// #ifdef DEBUG
+//     std::cout << "Matrix A:" << std::endl;
+//     utils::print_mat_gpu(A, M, K, a_major);
+//     std::cout << "Matrix B:" << std::endl;
+//     utils::print_mat_gpu(B, K, N, b_major);
+//     std::cout << "Matrix C:" << std::endl;
+//     utils::print_mat_gpu(C, M, N, c_major);
+// #endif
+//     printf("%f ms\n", ms);
 
-}
+// }
 __global__ void mmShared(float *, float *, float *, int, int, int);
 __global__ void mmSharedRR(float *, float *, float *, int, int, int);
 __global__ void mmSharedRC(float *, float *, float *, int, int, int);
