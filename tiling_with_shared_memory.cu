@@ -6,7 +6,7 @@
 #define TILE_SIZE 16
 
 void test(void (*kernel)(float *, float *, float *, int, int, int),
-    dim3 &threads, dim3 &blocks, float *A, float *B, float *C,
+    dim3 threads, dim3 blocks, float *A, float *B, float *C,
     float *dA, foat *dB, float *dC, int M, int N, int K, 
     int a_major, int b_major, int c_major){
     float ms;
