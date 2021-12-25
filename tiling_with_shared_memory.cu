@@ -27,6 +27,8 @@ int main(int argc, char *argv[]){
     test(&mmSharedRC, threads, blocks, M, K, N, utils::ROW_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR);
     std::cout << "Column Row" << std::endl;
     test(&mmSharedCR, threads, blocks, M, K, N, utils::COLUMN_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR);
+    std::cout << "Column Column" << std::endl;
+    test(&mmSharedCC, threads, blocks, M, K, N, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR);
 
     return 0;
 }
