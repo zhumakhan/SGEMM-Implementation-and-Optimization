@@ -27,7 +27,7 @@ __global__ void mmCompOpt(float *A, float *B, float *C, int M, int K, int N){
     int tx = threadIdx.x;
     int ty = threadIdx.y;
 
-    volatile __shared__ float As[ TILE_SIZE * TILE_SIZE ];
+    __shared__ float As[ TILE_SIZE * TILE_SIZE ];
 
     float Cv[ TILE_SIZE ] = { 0 };
 
@@ -40,8 +40,7 @@ __global__ void mmCompOpt(float *A, float *B, float *C, int M, int K, int N){
 
     int i, j;
     
-    volatile float *aPtr;
-    float *bPtr;
+    float *aPtr, *bPtr;
     float bValue;
 
     // to avoid repeated computations 
@@ -98,7 +97,7 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
     int tx = threadIdx.x;
     int ty = threadIdx.y;
 
-    volatile __shared__ float As[ TILE_SIZE * TILE_SIZE ];
+    __shared__ float As[ TILE_SIZE * TILE_SIZE ];
 
     float Cv[ TILE_SIZE ] = { 0 };
 
@@ -111,8 +110,7 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
 
     int i, j;
     
-    volatile float *aPtr;
-    float *bPtr;
+    float *aPtr, *bPtr;
     float bValue;
 
     // to avoid repeated computations 
@@ -190,7 +188,7 @@ int main(int argc, char *argv[]){
     cudaEventCreate(&stop);
     cudaEventRecord(start);
     
-    mmCompOpt<<<blocks,threads>>>(dA,dB,dC,M,K,N);
+    mmCompOpt_v1<<<blocks,threads>>>(dA,dB,dC,M,K,N);
     
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
