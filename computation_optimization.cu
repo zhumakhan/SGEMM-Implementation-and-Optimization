@@ -91,16 +91,22 @@ __global__ void mmCompOpt(float *A, float *B, float *C, int M, int K, int N){
 }
 
 __global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
+    
+    int bx = blockIdx.x;
+    int by = blockIdx.y;
+
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
 
     volatile __shared__ float As[ TILE_SIZE * TILE_SIZE ];
 
     float Cv[ TILE_SIZE ] = { 0 };
 
-    int aBegin  = K * TILE_SIZE * blockIdx.y;
+    int aBegin  = K * TILE_SIZE * by;
     int aEnd    = aBegin + K;
     int aStep   = TILE_SIZE;
 
-    int bBegin  = TILE_SIZE * VECTOR_SIZE * blockIdx.x;
+    int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
     int bStep   = TILE_SIZE * N;
 
     int i, j;
@@ -110,9 +116,9 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
     float bValue;
 
     // to avoid repeated computations 
-    int t1 = threadIdx.x * TILE_SIZE + threadIdx.y;
-    int t2 = threadIdx.y * K + threadIdx.x;
-    int t3 = threadIdx.y * TILE_SIZE + threadIdx.x;
+    int t1 = tx * TILE_SIZE + ty;
+    int t2 = ty * K + tx;
+    int t3 = ty * TILE_SIZE + tx;
     int t4;
 
     for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
@@ -120,13 +126,14 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
         for(i = 0; i < TILE_SIZE / VECTOR_SIZE; ++i){
             // load elements to As in column major way from matrix A
             t4 = i * VECTOR_SIZE;
-
+            // As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + K * (i * VECTOR_SIZE + ty) + tx ];
             As[ t1 + t4 ] = A[ a + t4 * K + t2 ];
         }
         
         __syncthreads();
 
         aPtr = As;
+        // bPtr = &B[ b + TILE_SIZE * ty + tx ];
         bPtr = &B[b + t3 ];
 
         for(i = 0; i < TILE_SIZE; ++i){
@@ -144,7 +151,8 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
 
     }
 
-    int c = N * TILE_SIZE * blockIdx.y + TILE_SIZE * VECTOR_SIZE * blockIdx.x;
+    int c = N * TILE_SIZE * by + TILE_SIZE * VECTOR_SIZE * bx;
+    // c += TILE_SIZE * ty + tx;
     c += t3;
 
     for(i = 0; i < TILE_SIZE; ++i){
