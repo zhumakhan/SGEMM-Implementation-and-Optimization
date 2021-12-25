@@ -190,7 +190,7 @@ int main(int argc, char *argv[]){
     cudaEventCreate(&stop);
     cudaEventRecord(start);
     
-    mmCompOpt_v1<<<blocks,threads>>>(dA,dB,dC,M,K,N);
+    mmCompOpt<<<blocks,threads>>>(dA,dB,dC,M,K,N);
     
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
