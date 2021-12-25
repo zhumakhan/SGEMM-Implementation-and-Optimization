@@ -117,16 +117,16 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
     const int t1 = tx * TILE_SIZE + ty;
     const int t2 = ty * K + tx;
     const int t3 = ty * TILE_SIZE + tx;
-    int t4;
-    const int t5 = TILE_SIZE / VECTOR_SIZE;
+    const int t4 = TILE_SIZE / VECTOR_SIZE;
+    int t10;
 
     for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
 
-        for(i = 0; i < t5; ++i){
+        for(i = 0; i < t4; ++i){
             // load elements to As in column major way from matrix A
-            t4 = i * VECTOR_SIZE;
+            t10 = i * VECTOR_SIZE;
             // As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + K * (i * VECTOR_SIZE + ty) + tx ];
-            As[ t1 + t4 ] = A[ a + t4 * K + t2 ];
+            As[ t1 + t10 ] = A[ a + t10 * K + t2 ];
         }
         
         __syncthreads();
