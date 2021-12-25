@@ -51,7 +51,7 @@ __global__ void mmSharedRR(float *A, float *B, float *C, int M, int K, int N){
 
     for (int i = aBegin, j = bBegin; i < aEnd; i += aStep, j += bStep) {
         As[ty][tx] = A[i + K * ty + tx];
-        Bs[ty][tx] = B[j + N * ty + tx];
+        Bs[tx][ty] = B[j + N * tx + ty];
 
         __syncthreads();
 
