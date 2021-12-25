@@ -144,7 +144,7 @@ __global__ void mmSharedCC(float *A, float *B, float *C, int M, int K, int N){
 
     float Csub = 0;
 
-    for (int i = aBegin, j = bBegin; i <= aEnd; i += aStep, j += bStep) {
+    for (int i = aBegin, j = bBegin; i < aEnd; i += aStep, j += bStep) {
         As[ty][tx] = A[i + M * tx + ty];
         Bs[tx][ty] = B[j + K * ty + tx];
 
