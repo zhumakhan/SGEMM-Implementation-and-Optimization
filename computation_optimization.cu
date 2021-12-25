@@ -97,16 +97,16 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
     const int tx = threadIdx.x;
     const int ty = threadIdx.y;
 
-    __shared__ float As[ TILE_SIZE * TILE_SIZE ];
-
-    float Cv[ TILE_SIZE ] = { 0 };
-
     const int aBegin  = K * TILE_SIZE * by;
     const int aEnd    = aBegin + K;
     const int aStep   = TILE_SIZE;
 
     const int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
     const int bStep   = TILE_SIZE * N;
+
+    __shared__ float As[ TILE_SIZE * TILE_SIZE ];
+
+    float Cv[ TILE_SIZE ] = { 0 };
 
     int i, j;
     
@@ -133,7 +133,7 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
 
         aPtr = As;
         // bPtr = &B[ b + TILE_SIZE * ty + tx ];
-        bPtr = &B[b + t3 ];
+        bPtr = &B[ b + t3 ];
 
         for(i = 0; i < TILE_SIZE; ++i){
             bValue = *bPtr;
