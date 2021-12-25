@@ -89,7 +89,7 @@ __global__ void mmCompOpt(float *A, float *B, float *C, int M, int K, int N){
     }
 }
 
-__global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
+__global__ void mmCompOpt_v1(const float *A, const float *B, float *C, const int M, const int K, const int N){
     
     const int bx = blockIdx.x;
     const int by = blockIdx.y;
