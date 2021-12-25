@@ -1,3 +1,7 @@
+/*
+    by zhumakhan.nazir@nu.edu.kz
+*/
+
 #include "utils.cpp"
 #include <stdio.h>
 
@@ -37,8 +41,8 @@ __global__ void mmSharedRR(float *A, float *B, float *C, int M, int K, int N){
     int bx = blockIdx.x, by = blockIdx.y;
     int tx = threadIdx.x, ty = threadIdx.y;
 
-    __shared__ float As[TILE_SIZE][TILE_SIZE];
-    __shared__ float Bs[TILE_SIZE][TILE_SIZE];
+    volatile __shared__ float As[TILE_SIZE][TILE_SIZE];
+    volatile __shared__ float Bs[TILE_SIZE][TILE_SIZE];
 
     int aBegin = K * TILE_SIZE * by;
     int aEnd = aBegin + K;
@@ -69,8 +73,8 @@ __global__ void mmSharedRC(float *A, float *B, float *C, int M, int K, int N){
     int bx = blockIdx.x, by = blockIdx.y;
     int tx = threadIdx.x, ty = threadIdx.y;
 
-    __shared__ float As[TILE_SIZE][TILE_SIZE];
-    __shared__ float Bs[TILE_SIZE][TILE_SIZE];
+    volatile __shared__ float As[TILE_SIZE][TILE_SIZE];
+    volatile __shared__ float Bs[TILE_SIZE][TILE_SIZE];
 
     int aBegin = K * TILE_SIZE * by;
     int aEnd = aBegin + K;
@@ -101,8 +105,8 @@ __global__ void mmSharedCR(float *A, float *B, float *C, int M, int K, int N){
     int bx = blockIdx.x, by = blockIdx.y;
     int tx = threadIdx.x, ty = threadIdx.y;
 
-    __shared__ float As[TILE_SIZE][TILE_SIZE];
-    __shared__ float Bs[TILE_SIZE][TILE_SIZE];
+    volatile __shared__ float As[TILE_SIZE][TILE_SIZE];
+    volatile __shared__ float Bs[TILE_SIZE][TILE_SIZE];
 
     int aBegin = TILE_SIZE * by;
     int aEnd = aBegin + K*M;
@@ -132,8 +136,8 @@ __global__ void mmSharedCC(float *A, float *B, float *C, int M, int K, int N){
     int bx = blockIdx.x, by = blockIdx.y;
     int tx = threadIdx.x, ty = threadIdx.y;
 
-    __shared__ float As[TILE_SIZE][TILE_SIZE];
-    __shared__ float Bs[TILE_SIZE][TILE_SIZE];
+    volatile __shared__ float As[TILE_SIZE][TILE_SIZE];
+    volatile __shared__ float Bs[TILE_SIZE][TILE_SIZE];
 
     int aBegin = TILE_SIZE * by;
     int aEnd = aBegin + K*M;
