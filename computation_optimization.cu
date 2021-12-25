@@ -40,7 +40,8 @@ __global__ void mmCompOpt(float *A, float *B, float *C, int M, int K, int N){
 
     int i, j;
     
-    float *aPtr, *bPtr;
+    volatile float *aPtr;
+    float *bPtr;
     float bValue;
 
     // to avoid repeated computations 
@@ -94,7 +95,7 @@ int main(int argc, char *argv[]){
     int M = std::atoi(argv[1]);
     int K = std::atoi(argv[2]);
     int N = std::atoi(argv[3]);
-    
+
     printf("M=%d K=%d N=%d\n",M,K,N);
 
     float *A = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR,-50,50);
