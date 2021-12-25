@@ -91,22 +91,22 @@ __global__ void mmCompOpt(float *A, float *B, float *C, int M, int K, int N){
 
 __global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
     
-    int bx = blockIdx.x;
-    int by = blockIdx.y;
+    const int bx = blockIdx.x;
+    const int by = blockIdx.y;
 
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
+    const int tx = threadIdx.x;
+    const int ty = threadIdx.y;
 
     __shared__ float As[ TILE_SIZE * TILE_SIZE ];
 
     float Cv[ TILE_SIZE ] = { 0 };
 
-    int aBegin  = K * TILE_SIZE * by;
-    int aEnd    = aBegin + K;
-    int aStep   = TILE_SIZE;
+    const int aBegin  = K * TILE_SIZE * by;
+    const int aEnd    = aBegin + K;
+    const int aStep   = TILE_SIZE;
 
-    int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
-    int bStep   = TILE_SIZE * N;
+    const int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
+    const int bStep   = TILE_SIZE * N;
 
     int i, j;
     
@@ -114,11 +114,11 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, int M, int K, int N){
     float bValue;
 
     // to avoid repeated computations 
-    int t1 = tx * TILE_SIZE + ty;
-    int t2 = ty * K + tx;
-    int t3 = ty * TILE_SIZE + tx;
+    const int t1 = tx * TILE_SIZE + ty;
+    const int t2 = ty * K + tx;
+    const int t3 = ty * TILE_SIZE + tx;
     int t4;
-    int t5 = TILE_SIZE / VECTOR_SIZE;
+    const int t5 = TILE_SIZE / VECTOR_SIZE;
 
     for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
 
