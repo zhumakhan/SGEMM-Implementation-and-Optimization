@@ -81,9 +81,11 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
         ptr1 = pre1;
         ptr2 = &B[ b + t3 ];
 
+        #pragma unroll
         for(i = 0; i < TILE_SIZE; ++i){
             bValue = *ptr2;
 
+            #pragma unroll
             for(j = 0; j < TILE_SIZE; ++j){
                 Cv[ j ] += ptr1[ j ] * bValue;
             }
@@ -105,6 +107,7 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
     // c += TILE_SIZE * ty + tx;
     j += t3;
 
+    #pragma unroll
     for(i = 0; i < TILE_SIZE; ++i){
         C[ j ] = Cv[ i ];
         j += N;
