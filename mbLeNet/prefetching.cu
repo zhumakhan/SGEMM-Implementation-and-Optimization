@@ -58,7 +58,7 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
     ptr1 = &pre1[ t1 ];
     ptr2 = &A[ aBegin + t2 ];
 
-    // #pragma unroll
+    #pragma unroll
     for(i = 0; i < t4; ++i){
         ptr1[ t10 ] = ptr2[ t10 * K ];
         t10         += VECTOR_SIZE;
@@ -73,7 +73,7 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
         ptr2    = &A[ a + aStep + t2 ];
         t10     = 0;
 
-        // #pragma unroll
+        #pragma unroll
         for(i = 0; i < t4; ++i){
             // load elements to As in column major way from matrix A
             ptr1[ t10 ] = ptr2[ t10 * K ];
@@ -83,11 +83,11 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
         ptr1 = pre1;
         ptr2 = &B[ b + t3 ];
 
-        // #pragma unroll
+        #pragma unroll
         for(i = 0; i < TILE_SIZE; ++i){
             bValue = *ptr2;
 
-            // #pragma unroll
+            #pragma unroll
             for(j = 0; j < TILE_SIZE; ++j){
                 Cv[ j ] += ptr1[ j ] * bValue;
             }
@@ -109,7 +109,7 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
     // c += TILE_SIZE * ty + tx;
     j += t3;
 
-    // #pragma unroll
+    #pragma unroll
     for(i = 0; i < TILE_SIZE; ++i){
         C[ j ] = Cv[ i ];
         j += N;
