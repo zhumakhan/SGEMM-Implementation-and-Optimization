@@ -23,12 +23,12 @@ typedef void (*FunctionPointer_t)(float *, float *, float *, const int, const in
 
 class Kernel_t{
 public:
-    string name;
+    std::string name;
     FunctionPointer_t function;
     dim3 threads;
     dim3 blocks;
 
-    Kernel_t(string name, FunctionPointer_t function, dim3 threads, dim3 blocks):name(name),function(function), threads(threads), blocks(blocks){
+    Kernel_t(std::string name, FunctionPointer_t function, dim3 threads, dim3 blocks):name(name),function(function), threads(threads), blocks(blocks){
     }
 };
 
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
                 ? "Correct!!" : "Wrong Answer!") << std::endl;
         #endif
 
-        std::cout << kernels[i].name << " " << ms << endl;
+        std::cout << kernels[i].name << " " << ms << std::endl;
     }
 
 
