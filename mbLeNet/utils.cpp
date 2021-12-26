@@ -123,7 +123,7 @@ bool check_sum(T* a, T* b, T* c, int row, int col, int order_type_a, int order_t
 template <typename T>
 bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type_a, int order_type_b, int order_type_c) {
     /* Check if the result of matrix multiplication is right.*/
-    std::cout<<std::setprecision(6);
+    std::cout<<std::setprecision(10);
     T value = 0;
 	for (int i = 0; i < M; ++i) {
 	    for (int j = 0; j < N; ++j) {
