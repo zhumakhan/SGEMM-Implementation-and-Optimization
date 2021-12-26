@@ -23,11 +23,12 @@ typedef void (*FunctionPointer_t)(float *, float *, float *, const int, const in
 
 class Kernel_t{
 public:
+    string name;
     FunctionPointer_t function;
     dim3 threads;
     dim3 blocks;
 
-    Kernel_t(FunctionPointer_t function, dim3 threads, dim3 blocks):function(function), threads(threads), blocks(blocks){
+    Kernel_t(string name, FunctionPointer_t function, dim3 threads, dim3 blocks):name(name),function(function), threads(threads), blocks(blocks){
     }
 };
 
@@ -62,10 +63,10 @@ int main(int argc, char *argv[]){
     dim3 blocks2(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
     
     Kernel_t kernels [ 4 ] = {
-        {   &mmSharedRR, threads1, blocks1      },
-        {   &mmCompOpt_v1, threads2, blocks2    },
-        {   &mmLoopUnrolling, threads2, blocks2 },
-        {   &mmPrefetching, threads2, blocks2   }
+        {   "tiling", &mmSharedRR, threads1, blocks1      },
+        {   "comp_opt", &mmCompOpt_v1, threads2, blocks2    },
+        {   "unrolling", &mmLoopUnrolling, threads2, blocks2 },
+        {   "prefetching", &mmPrefetching, threads2, blocks2   }
     };
 
     for(int i = 0; i < 4; i++){
@@ -96,7 +97,7 @@ int main(int argc, char *argv[]){
                 ? "Correct!!" : "Wrong Answer!") << std::endl;
         #endif
 
-        printf("%f\n",ms);
+        std::cout << kernels[i].name << " " << ms << endl;
     }
 
 
