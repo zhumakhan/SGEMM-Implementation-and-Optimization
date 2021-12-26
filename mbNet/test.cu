@@ -5,7 +5,7 @@
 #include "utils.cpp"
 #include "tiling_with_shared_memory.cu"
 #include "computation_optimization.cu"
-#include "loop_unrollung.cu"
+#include "loop_unrolling.cu"
 #include "prefetching.cu"
 
 #include <stdio.h>
