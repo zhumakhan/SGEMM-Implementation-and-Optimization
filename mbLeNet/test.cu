@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
         cudaEventCreate(&stop);
         cudaEventRecord(start);
         
-        (*kernels[0].functon) <<< kernels[0].blocks, kernels[0].threads >>> ( dA, dB, dC, M, K, N );
+        (*kernels[0].function) <<< kernels[0].blocks, kernels[0].threads >>> ( dA, dB, dC, M, K, N );
         
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);
