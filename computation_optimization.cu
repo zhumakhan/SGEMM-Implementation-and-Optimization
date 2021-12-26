@@ -97,7 +97,7 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
     const int tx = threadIdx.x;
     const int ty = threadIdx.y;
 
-    const int aBegin  = K * TILE_SIZE * by;
+    const int aBegin  = TILE_SIZE * K * by;
     const int aEnd    = aBegin + K;
     const int aStep   = TILE_SIZE;
 
@@ -127,6 +127,79 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
             t10 = i * VECTOR_SIZE;
             // As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + K * (i * VECTOR_SIZE + ty) + tx ];
             As[ t1 + t10 ] = A[ a + t10 * K + t2 ];
+        }
+        
+        __syncthreads();
+
+        aPtr = As;
+        // bPtr = &B[ b + TILE_SIZE * ty + tx ];
+        bPtr = &B[ b + t3 ];
+
+        for(i = 0; i < TILE_SIZE; ++i){
+            bValue = *bPtr;
+
+            for(j = 0; j < TILE_SIZE; ++j){
+                Cv[ j ] += aPtr[ j ] * bValue;
+            }
+
+            aPtr += TILE_SIZE;
+            bPtr += N;
+        }
+
+        __syncthreads();
+
+    }
+
+    int c = N * TILE_SIZE * by + TILE_SIZE * VECTOR_SIZE * bx;
+    // c += TILE_SIZE * ty + tx;
+    c += t3;
+
+    for(i = 0; i < TILE_SIZE; ++i){
+        C[ c ] = Cv[ i ];
+        c += N;
+    }
+}
+
+
+//A is column major matrix
+__global__ void mmCompOpt_v2(float *A, float *B, float *C, const int M, const int K, const int N){
+    
+    const int bx = blockIdx.x;
+    const int by = blockIdx.y;
+
+    const int tx = threadIdx.x;
+    const int ty = threadIdx.y;
+
+    const int aBegin  = TILE_SIZE * by;
+    const int aEnd    = K * M;
+    const int aStep   = TILE_SIZE * K;
+
+    const int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
+    const int bStep   = TILE_SIZE * N;
+
+    __shared__ float As[ TILE_SIZE * TILE_SIZE ];
+
+    float Cv[ TILE_SIZE ] = { 0 };
+
+    int i, j;
+    
+    float *aPtr, *bPtr;
+    float bValue;
+
+    // to avoid repeated computations 
+    const int t1 = tx * TILE_SIZE + ty;
+    const int t2 = ty * K + tx;
+    const int t3 = ty * TILE_SIZE + tx;
+    const int t4 = TILE_SIZE / VECTOR_SIZE;
+    int t10;
+
+    for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
+
+        for(i = 0; i < t4; ++i){
+            // load elements to As in column major way from matrix A
+            // t10 = i * VECTOR_SIZE;
+            As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + K * (i * VECTOR_SIZE + tx) + ty ];
+            // As[ t1 + t10 ] = A[ a + t10 * K + t2 ];
         }
         
         __syncthreads();
