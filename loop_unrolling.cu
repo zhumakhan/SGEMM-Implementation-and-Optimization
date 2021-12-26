@@ -48,20 +48,20 @@ __global__ void mmLoopUnrolling(float *A, float *B, float *C, const int M, const
     const int t2 = ty * K + tx;
     const int t3 = ty * TILE_SIZE + tx;
     const int t4 = TILE_SIZE / VECTOR_SIZE;
-    int t10;
+    int t10      = 0;
 
     for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
         
-        aPtr = &As[ t1 ];
-        bPtr = &A[ a + t2 ];
-
+        aPtr    = &As[ t1 ];
+        bPtr    = &A[ a + t2 ];
+        t10     = 0;
         #pragma unroll
         for(i = 0; i < t4; ++i){
             // load elements to As in column major way from matrix A
-            t10 = i * VECTOR_SIZE;
             // As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + K * (i * VECTOR_SIZE + ty) + tx ];
             // As[ t1 + t10 ] = A[ a + t10 * K + t2 ];
             aPtr[ t10 ] = bPtr[ t10 * K ];
+            t10         += VECTOR_SIZE;
         }
         
         __syncthreads();
@@ -87,13 +87,13 @@ __global__ void mmLoopUnrolling(float *A, float *B, float *C, const int M, const
 
     }
 
-    int c = N * TILE_SIZE * by + TILE_SIZE * VECTOR_SIZE * bx;
+    j = N * TILE_SIZE * by + TILE_SIZE * VECTOR_SIZE * bx;
     // c += TILE_SIZE * ty + tx;
-    c += t3;
+    j += t3;
     #pragma unroll
     for(i = 0; i < TILE_SIZE; ++i){
-        C[ c ] = Cv[ i ];
-        c += N;
+        C[ j ] = Cv[ i ];
+        j += N;
     }
 }
 
