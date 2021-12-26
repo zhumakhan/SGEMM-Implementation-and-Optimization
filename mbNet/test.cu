@@ -21,6 +21,16 @@
 
 typedef void (*FunctionPointer_t)(float *, float *, float *, const int, const int, const int);
 
+class Kernel_t{
+public:
+    FunctionPointer_t function;
+    dim3 threads;
+    dim3 blocks;
+
+    Kernel_t(FunctionPointer_t function, dim3 threads, dim3 blocks):function(function), threads(threads), blocks(blocks){
+    }
+};
+
 
 int main(int argc, char *argv[]){
     int M = std::atoi(argv[1]);
@@ -51,11 +61,11 @@ int main(int argc, char *argv[]){
     dim3 threads2( TILE_SIZE, VECTOR_SIZE );
     dim3 blocks2(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
     
-    FunctionPointer_t kernels [ 4 ] = {
-        &mmSharedRR,
-        &mmCompOpt_v1,
-        &mmLoopUnrolling,
-        &mmPrefetching
+    Kernel_t kernels [ 4 ] = {
+        {   &mmSharedRR, threads1, blocks1      },
+        {   &mmCompOpt_v1, threads2, blocks2    },
+        {   &mmLoopUnrolling, threads2, blocks2 },
+        {   &mmPrefetching, threads2, blocks2   }
     };
 
     for(int i = 0; i < 4; i++){
@@ -64,7 +74,7 @@ int main(int argc, char *argv[]){
         cudaEventCreate(&stop);
         cudaEventRecord(start);
         
-        (*kernels[0])<<<blocks1,threads1>>>(dA,dB,dC,M,K,N);
+        (*kernels[0].functon) <<< kernels[0].blocks, kernels[0].threads >>> ( dA, dB, dC, M, K, N );
         
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);
