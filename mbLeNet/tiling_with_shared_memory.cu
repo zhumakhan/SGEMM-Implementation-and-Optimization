@@ -5,7 +5,12 @@
 #include "utils.cpp"
 #include <stdio.h>
 
+#ifndef TILE_SIZE
 #define TILE_SIZE 16
+#endif
+#ifndef VECTOR_SIZE
+#define VECTOR_SIZE 4
+#endif
 
 // __global__ void mmSharedRR(float *, float *, float *, int, int, int);
 // __global__ void mmSharedRC(float *, float *, float *, int, int, int);
