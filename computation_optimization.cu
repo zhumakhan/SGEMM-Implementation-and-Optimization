@@ -121,12 +121,16 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
     int t10;
 
     for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
+        
+        aPtr = &As[ t1 ];
+        bptr = &A[ a + t2 ];
 
         for(i = 0; i < t4; ++i){
             // load elements to As in column major way from matrix A
             t10 = i * VECTOR_SIZE;
             // As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + K * (i * VECTOR_SIZE + ty) + tx ];
-            As[ t1 + t10 ] = A[ a + t10 * K + t2 ];
+            // As[ t1 + t10 ] = A[ a + t10 * K + t2 ];
+            aPtr[ t10 ] = bPtr[ t10 * K ];
         }
         
         __syncthreads();
