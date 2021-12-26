@@ -80,6 +80,8 @@ int main(int argc, char *argv[]){
         cudaEventCreate(&stop);
         cudaEventRecord(start);
         
+        sleep(1);
+        
         (*kernels[i].function) <<< kernels[i].blocks, kernels[i].threads >>> ( dA, dB, dC, M, K, N );
         
         cudaEventRecord(stop);
