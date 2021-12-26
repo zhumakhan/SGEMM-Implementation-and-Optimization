@@ -4,6 +4,11 @@
 #include <random>
 #include <cmath>
 
+#ifndef MB_NET_UTILS
+#define MB_NET_UTILS
+
+#ifdef MB_NET_UTILS
+
 #ifndef IDXR
 #define IDXR(i,j,row,col) (((i)*(col))+(j))
 #endif
@@ -151,4 +156,5 @@ bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type_a, int orde
 //     return 0;
 // }
 
+#endif
 
