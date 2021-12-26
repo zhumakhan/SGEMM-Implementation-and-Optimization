@@ -7,8 +7,6 @@
 #ifndef MB_NET_UTILS
 #define MB_NET_UTILS
 
-#ifdef MB_NET_UTILS
-
 #ifndef IDXR
 #define IDXR(i,j,row,col) (((i)*(col))+(j))
 #endif
