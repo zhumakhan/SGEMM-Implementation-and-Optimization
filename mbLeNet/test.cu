@@ -12,8 +12,13 @@
 #include <stdio.h>
 // #include <unistd.h>
 
+
+#ifndef TILE_SIZE
 #define TILE_SIZE 16
+#endif
+#ifndef VECTOR_SIZE
 #define VECTOR_SIZE 4
+#endif
 
 /*
     A is a row major matrix ( M x K )
