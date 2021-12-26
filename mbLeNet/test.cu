@@ -3,6 +3,7 @@
 */
 
 #include "utils.cpp"
+#include "test_cublas.cu"
 #include "tiling_with_shared_memory.cu"
 #include "computation_optimization.cu"
 #include "loop_unrolling.cu"
@@ -34,11 +35,15 @@ public:
 
 
 int main(int argc, char *argv[]){
-    int M = std::atoi(argv[1]);
-    int K = std::atoi(argv[2]);
-    int N = std::atoi(argv[3]);
+    const int M = std::atoi(argv[1]);
+    const int K = std::atoi(argv[2]);
+    const int N = std::atoi(argv[3]);
 
     printf("M=%d K=%d N=%d\n",M,K,N);
+
+    
+    test_cublas( M, K, N );
+    
 
     float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
     float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
@@ -56,13 +61,13 @@ int main(int argc, char *argv[]){
     cudaMemcpy(dA,A,sizeof(float)*M*K, cudaMemcpyHostToDevice);
     cudaMemcpy(dB,B,sizeof(float)*K*N, cudaMemcpyHostToDevice);
 
-    dim3 threads1( TILE_SIZE, TILE_SIZE );
-    dim3 blocks1(N / TILE_SIZE, M / TILE_SIZE);
+    const dim3 threads1( TILE_SIZE, TILE_SIZE );
+    const dim3 blocks1(N / TILE_SIZE, M / TILE_SIZE);
 
-    dim3 threads2( TILE_SIZE, VECTOR_SIZE );
-    dim3 blocks2(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
+    const dim3 threads2( TILE_SIZE, VECTOR_SIZE );
+    const dim3 blocks2(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
     
-    Kernel_t kernels [ 4 ] = {
+    const Kernel_t kernels [ 4 ] = {
         {   "tiling", &mmSharedRR, threads1, blocks1      },
         {   "comp_opt", &mmCompOpt_v1, threads2, blocks2    },
         {   "unrolling", &mmLoopUnrolling, threads2, blocks2 },
@@ -90,18 +95,23 @@ int main(int argc, char *argv[]){
           exit(-1);
         }
 
+        bool correct = true;
+        
+#ifdef CHECK
         cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
+        correct = utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR);
+#endif
 
-        #ifdef CHECK
-        std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
-                ? "Correct!!" : "Wrong Answer!") << std::endl;
-        #endif
-
-        std::cout << kernels[i].name << " " << ms << std::endl;
+        std::cout << kernels[i].name << " " << ms << " " << correct << std::endl;
     }
 
 
 #ifdef DEBUG
+
+#ifndef CHECK
+    cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
+#endif
+
     std::cout << "Matrix A:" << std::endl;
     utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
     std::cout << "Matrix B:" << std::endl;
