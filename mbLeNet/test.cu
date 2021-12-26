@@ -10,7 +10,7 @@
 #include "prefetching.cu"
 
 #include <stdio.h>
-#include <unistd.h>
+// #include <unistd.h>
 
 #define TILE_SIZE 16
 #define VECTOR_SIZE 4
@@ -21,18 +21,18 @@
 
 */
 
-typedef void (*FunctionPointer_t)(float *, float *, float *, const int, const int, const int);
+// typedef void (*FunctionPointer_t)(float *, float *, float *, const int, const int, const int);
 
-class Kernel_t{
-public:
-    std::string name;
-    FunctionPointer_t function;
-    dim3 threads;
-    dim3 blocks;
+// class Kernel_t{
+// public:
+//     std::string name;
+//     FunctionPointer_t function;
+//     dim3 threads;
+//     dim3 blocks;
 
-    Kernel_t(std::string name, FunctionPointer_t function, dim3 threads, dim3 blocks):name(name),function(function), threads(threads), blocks(blocks){
-    }
-};
+//     Kernel_t(std::string name, FunctionPointer_t function, dim3 threads, dim3 blocks):name(name),function(function), threads(threads), blocks(blocks){
+//     }
+// };
 
 
 int main(int argc, char *argv[]){
@@ -68,28 +68,34 @@ int main(int argc, char *argv[]){
     const dim3 threads2( TILE_SIZE, VECTOR_SIZE );
     const dim3 blocks2(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
     
-    const Kernel_t kernels [ 4 ] = {
-        {   "tiling", &mmSharedRR, threads1, blocks1      },
-        {   "comp_opt", &mmCompOpt_v1, threads2, blocks2    },
-        {   "unrolling", &mmLoopUnrolling, threads2, blocks2 },
-        {   "prefetching", &mmPrefetching, threads2, blocks2   }
-    };
+    // const Kernel_t kernels [ 4 ] = {
+    //     {   "tiling", &mmSharedRR, threads1, blocks1      },
+    //     {   "comp_opt", &mmCompOpt_v1, threads2, blocks2    },
+    //     {   "unrolling", &mmLoopUnrolling, threads2, blocks2 },
+    //     {   "prefetching", &mmPrefetching, threads2, blocks2   }
+    // };
 
-    for(int i = 0; i < 4; i++){
+    // for(int i = 0; i < 4; i++){
 
-        sleep(5);
+        // sleep(5);
+
+        // cudaEventCreate(&start);
+        // cudaEventCreate(&stop);
+        // cudaEventRecord(start);
+
+        mmSharedRR <<< blocks1, threads1 >>> ( dA, dB, dC, M, K, N );
+
+        mmCompOpt_v1 <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
+
+        mmLoopUnrolling <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
+
+        mmPrefetching <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
         
-        cudaEventCreate(&start);
-        cudaEventCreate(&stop);
-        cudaEventRecord(start);
-
-        (*kernels[i].function) <<< kernels[i].blocks, kernels[i].threads >>> ( dA, dB, dC, M, K, N );
-        
-        cudaEventRecord(stop);
-        cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&ms, start, stop);
-        cudaEventDestroy(start);
-        cudaEventDestroy(stop);
+        // cudaEventRecord(stop);
+        // cudaEventSynchronize(stop);
+        // cudaEventElapsedTime(&ms, start, stop);
+        // cudaEventDestroy(start);
+        // cudaEventDestroy(stop);
         
         cudaError_t cuda_error = cudaGetLastError();
         if(cuda_error != cudaSuccess)
@@ -98,30 +104,30 @@ int main(int argc, char *argv[]){
           exit(-1);
         }
 
-        bool correct = true;
+        // bool correct = true;
         
-#ifdef CHECK
-        cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
-        correct = utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR);
-#endif
+// #ifdef CHECK
+//         cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
+//         correct = utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR);
+// #endif
 
-        std::cout << kernels[i].name << " " << ms << " " << correct << std::endl;
-    }
+//         std::cout << kernels[i].name << " " << ms << " " << correct << std::endl;
+//     }
 
 
-#ifdef DEBUG
+// #ifdef DEBUG
 
-#ifndef CHECK
-    cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
-#endif
+// #ifndef CHECK
+//     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
+// #endif
 
-    std::cout << "Matrix A:" << std::endl;
-    utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
-    std::cout << "Matrix B:" << std::endl;
-    utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
-    std::cout << "Matrix C:" << std::endl;
-    utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
-#endif
+//     std::cout << "Matrix A:" << std::endl;
+//     utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
+//     std::cout << "Matrix B:" << std::endl;
+//     utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
+//     std::cout << "Matrix C:" << std::endl;
+//     utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
+// #endif
 
     cudaFree(dA);
     cudaFree(dB);
