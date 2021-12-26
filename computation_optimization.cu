@@ -123,7 +123,7 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
     for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
         
         aPtr = &As[ t1 ];
-        bptr = &A[ a + t2 ];
+        bPtr = &A[ a + t2 ];
 
         for(i = 0; i < t4; ++i){
             // load elements to As in column major way from matrix A
