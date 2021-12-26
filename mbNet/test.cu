@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
         cudaEventCreate(&stop);
         cudaEventRecord(start);
         
-        // (*kernels[i])<<<blocks,threads>>>(dA,dB,dC,M,K,N);
+        (*kernels[0])<<<blocks1,threads1>>>(dA,dB,dC,M,K,N);
         
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);
