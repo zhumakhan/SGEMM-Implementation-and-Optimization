@@ -104,6 +104,6 @@ void test_cublas(const int M, const int K, const int N) {
     free(c);
     
     std::cout << "cublas" << " " << ms << " " << correct << std::endl;
-    return 0;
+    return;
 }
     
