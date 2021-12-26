@@ -154,13 +154,13 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
 
     }
 
-    int c = N * TILE_SIZE * by + TILE_SIZE * VECTOR_SIZE * bx;
+    j = N * TILE_SIZE * by + TILE_SIZE * VECTOR_SIZE * bx;
     // c += TILE_SIZE * ty + tx;
-    c += t3;
+    j += t3;
 
     for(i = 0; i < TILE_SIZE; ++i){
-        C[ c ] = Cv[ i ];
-        c += N;
+        C[ j ] = Cv[ i ];
+        j += N;
     }
 }
 
