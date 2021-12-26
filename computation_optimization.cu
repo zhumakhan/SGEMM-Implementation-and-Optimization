@@ -172,7 +172,7 @@ __global__ void mmCompOpt_v2(float *A, float *B, float *C, const int M, const in
 
     const int aBegin  = TILE_SIZE * by;
     const int aEnd    = K * M;
-    const int aStep   = TILE_SIZE * K;
+    const int aStep   = TILE_SIZE * M;
 
     const int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
     const int bStep   = TILE_SIZE * N;
@@ -188,7 +188,7 @@ __global__ void mmCompOpt_v2(float *A, float *B, float *C, const int M, const in
 
     // to avoid repeated computations 
     const int t1 = tx * TILE_SIZE + ty;
-    const int t2 = ty * K + tx;
+    const int t2 = tx * M + ty;
     const int t3 = ty * TILE_SIZE + tx;
     const int t4 = TILE_SIZE / VECTOR_SIZE;
     int t10;
@@ -197,9 +197,9 @@ __global__ void mmCompOpt_v2(float *A, float *B, float *C, const int M, const in
 
         for(i = 0; i < t4; ++i){
             // load elements to As in column major way from matrix A
-            // t10 = i * VECTOR_SIZE;
-            As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + K * (i * VECTOR_SIZE + tx) + ty ];
-            // As[ t1 + t10 ] = A[ a + t10 * K + t2 ];
+            t10 = i * VECTOR_SIZE;
+            // As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + M * tx + ty + i * VECTOR_SIZE ];
+            As[ t1 + t10 ] = A[ a + t2 + t10 ];
         }
         
         __syncthreads();
@@ -285,7 +285,7 @@ int main(int argc, char *argv[]){
 #endif
 #ifdef DEBUG
     std::cout << "Matrix A:" << std::endl;
-    utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
+    utils::print_mat_gpu(a, M, K, utils::COLUMN_MAJOR);
     std::cout << "Matrix B:" << std::endl;
     utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
     std::cout << "Matrix C:" << std::endl;
