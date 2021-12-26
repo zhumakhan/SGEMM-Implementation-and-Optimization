@@ -10,6 +10,7 @@
 #include "prefetching.cu"
 
 #include <stdio.h>
+#include <unistd.h>
 
 #define TILE_SIZE 16
 #define VECTOR_SIZE 4
@@ -80,8 +81,8 @@ int main(int argc, char *argv[]){
         cudaEventCreate(&stop);
         cudaEventRecord(start);
         
-        sleep(1);
-        
+        sleep(5);
+
         (*kernels[i].function) <<< kernels[i].blocks, kernels[i].threads >>> ( dA, dB, dC, M, K, N );
         
         cudaEventRecord(stop);
