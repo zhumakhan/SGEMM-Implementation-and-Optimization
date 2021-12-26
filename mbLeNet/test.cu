@@ -77,11 +77,11 @@ int main(int argc, char *argv[]){
 
     for(int i = 0; i < 4; i++){
 
+        sleep(5);
+        
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
         cudaEventRecord(start);
-        
-        sleep(5);
 
         (*kernels[i].function) <<< kernels[i].blocks, kernels[i].threads >>> ( dA, dB, dC, M, K, N );
         
