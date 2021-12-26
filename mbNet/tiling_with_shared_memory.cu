@@ -7,38 +7,38 @@
 
 #define TILE_SIZE 16
 
-__global__ void mmSharedRR(float *, float *, float *, int, int, int);
-__global__ void mmSharedRC(float *, float *, float *, int, int, int);
-__global__ void mmSharedCR(float *, float *, float *, int, int, int);
-__global__ void mmSharedCC(float *, float *, float *, int, int, int);
+// __global__ void mmSharedRR(float *, float *, float *, int, int, int);
+// __global__ void mmSharedRC(float *, float *, float *, int, int, int);
+// __global__ void mmSharedCR(float *, float *, float *, int, int, int);
+// __global__ void mmSharedCC(float *, float *, float *, int, int, int);
 
-void test(void (*kernel)(float *, float *, float *, int, int, int),
-    dim3 &threads, dim3 &blocks, int M, int K, int N, 
-    int a_major, int b_major, int c_major);
+// void test(void (*kernel)(float *, float *, float *, int, int, int),
+//     dim3 &threads, dim3 &blocks, int M, int K, int N, 
+//     int a_major, int b_major, int c_major);
 
 
-int main(int argc, char *argv[]){
-    int M = std::atoi(argv[1]);
-    int K = std::atoi(argv[2]);
-    int N = std::atoi(argv[3]);
+// int main(int argc, char *argv[]){
+//     int M = std::atoi(argv[1]);
+//     int K = std::atoi(argv[2]);
+//     int N = std::atoi(argv[3]);
 
-    printf("M=%d K=%d N=%d\n",M,K,N);
+//     printf("M=%d K=%d N=%d\n",M,K,N);
     
 
-    dim3 threads(   TILE_SIZE, TILE_SIZE    );
-    dim3 blocks(    ( N + threads.x - 1 ) / threads.x, ( M + threads.y - 1 ) / threads.y   );
+//     dim3 threads(   TILE_SIZE, TILE_SIZE    );
+//     dim3 blocks(    ( N + threads.x - 1 ) / threads.x, ( M + threads.y - 1 ) / threads.y   );
 
-    std::cout << "Row Row" << std::endl;
-    test(&mmSharedRR, threads, blocks, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR);
-    std::cout << "Row Column" << std::endl;
-    test(&mmSharedRC, threads, blocks, M, K, N, utils::ROW_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR);
-    std::cout << "Column Row" << std::endl;
-    test(&mmSharedCR, threads, blocks, M, K, N, utils::COLUMN_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR);
-    std::cout << "Column Column" << std::endl;
-    test(&mmSharedCC, threads, blocks, M, K, N, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR);
+//     std::cout << "Row Row" << std::endl;
+//     test(&mmSharedRR, threads, blocks, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR);
+//     std::cout << "Row Column" << std::endl;
+//     test(&mmSharedRC, threads, blocks, M, K, N, utils::ROW_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR);
+//     std::cout << "Column Row" << std::endl;
+//     test(&mmSharedCR, threads, blocks, M, K, N, utils::COLUMN_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR);
+//     std::cout << "Column Column" << std::endl;
+//     test(&mmSharedCC, threads, blocks, M, K, N, utils::COLUMN_MAJOR, utils::COLUMN_MAJOR, utils::ROW_MAJOR);
 
-    return 0;
-}
+//     return 0;
+// }
 
 __global__ void mmSharedRR(float *A, float *B, float *C, int M, int K, int N){
     int bx = blockIdx.x, by = blockIdx.y;
