@@ -60,8 +60,8 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
     ptr2 = &A[ aBegin + t2 ];
 
     for(i = 0; i < t4; ++i){
-        t10         += VECTOR_SIZE;
         ptr1[ t10 ] = ptr2[ t10 * K ];
+        t10         += VECTOR_SIZE;
     }
     __syncthreads();
 
@@ -74,8 +74,8 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
         t10     = 0;
         for(i = 0; i < t4; ++i){
             // load elements to As in column major way from matrix A
-            t10         += VECTOR_SIZE;
             ptr1[ t10 ] = ptr2[ t10 * K ];
+            t10         += VECTOR_SIZE;
         }
 
         ptr1 = pre1;
