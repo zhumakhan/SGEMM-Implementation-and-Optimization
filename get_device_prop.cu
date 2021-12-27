@@ -1,5 +1,4 @@
-#include "utils.cpp"
-#include "blas.cu"
+
 #include <stdio.h>
 
 int main() {
