@@ -93,8 +93,8 @@ int main(int argc, char *argv[]) {
 	dim3 threads(TILE_SIZE, VECTOR_SIZE);
 	dim3 grid(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
 
-	float *a = utils::random_matrix_gpu<float>(M, K, utils::C_ORDER);
-	float *b = utils::random_matrix_gpu<float>(K, N, utils::C_ORDER);
+	float *a = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR);
+	float *b = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR);
 	float *c = new float[M*N];
 
 	float *dev_a, *dev_b, *dev_c;
@@ -110,15 +110,15 @@ int main(int argc, char *argv[]) {
 
 	cudaMemcpy(c, dev_c, M*N*sizeof(float), cudaMemcpyDeviceToHost);
 #ifdef CHECK
-	std::cout << (utils::check_mul<float>(a, b, c, M, K, N, utils::C_ORDER) ? "Correct!!" : "Wrong Answer!") << std::endl;
+	std::cout << (utils::check_mul<float>(a, b, c, M, K, N, utils::ROW_MAJOR,utils::ROW_MAJOR,utils::ROW_MAJOR) ? "Correct!!" : "Wrong Answer!") << std::endl;
 #endif
 #ifdef DEBUG
     std::cout << "Matrix A:" << std::endl;
-    utils::print_mat_gpu(a, M, K, utils::C_ORDER);
+    utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
     std::cout << "Matrix B:" << std::endl;
-    utils::print_mat_gpu(b, K, N, utils::C_ORDER);
+    utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
     std::cout << "Matrix C:" << std::endl;
-    utils::print_mat_gpu(c, M, N, utils::C_ORDER);
+    utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
 #endif
 	cudaFree(dev_a);
 	cudaFree(dev_b);

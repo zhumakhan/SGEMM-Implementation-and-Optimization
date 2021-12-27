@@ -33,9 +33,9 @@ int main(int argc, char *argv[]){
 
     printf("M=%d K=%d N=%d\n",M,K,N);
 
-    
+#ifdef CUBLAS_TEST    
     test_cublas( M, K, N );
-    
+#endif
 
     float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
     float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
@@ -57,15 +57,22 @@ int main(int argc, char *argv[]){
     const dim3 threads2( TILE_SIZE, VECTOR_SIZE );
     const dim3 blocks2(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
     
-
+#ifdef SHARED_TEST
     mmSharedRR <<< blocks1, threads1 >>> ( dA, dB, dC, M, K, N );
+#endif
 
+#ifdef COMP_OPT_TEST
     mmCompOpt_v1 <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
+#endif
 
+#ifdef UNROLLING_TEST
     mmLoopUnrolling <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
+#endif
 
+#ifdef PREFETCHING_TEST
     mmPrefetching <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
-        
+#endif    
+    
         
     cudaError_t cuda_error = cudaGetLastError();
     if(cuda_error != cudaSuccess)
