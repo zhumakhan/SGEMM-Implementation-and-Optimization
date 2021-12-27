@@ -58,11 +58,11 @@ int main(int argc, char *argv[]){
     const dim3 blocks2(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
     
 
-    mmSharedRR <<< blocks1, threads1 >>> ( dA, dB, dC, M, K, N );
+    // mmSharedRR <<< blocks1, threads1 >>> ( dA, dB, dC, M, K, N );
 
-    mmCompOpt_v1 <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
-
-    mmLoopUnrolling <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
+    // mmCompOpt_v1 <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
+// 
+    // mmLoopUnrolling <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
 
     mmPrefetching <<< blocks2, threads2 >>> ( dA, dB, dC, M, K, N );
         
