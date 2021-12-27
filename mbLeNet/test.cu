@@ -81,6 +81,12 @@ int main(int argc, char *argv[]){
       exit(-1);
     }
 
+#ifdef CHECK
+    cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::COLUMN_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
+            ? "Correct!!" : "Wrong Answer!") << std::endl;
+#endif
+
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dC);
