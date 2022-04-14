@@ -6,8 +6,8 @@
 
 void test_cublas(const int M, const int K, const int N) {
 
-    float *a = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR,-50,50);
-    float *b = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR,-50,50);
+    float *a = utils::random_matrix_gpu<float>(M, K, utils::COLUMN_MAJOR,-1,1);
+    float *b = utils::random_matrix_gpu<float>(K, N, utils::COLUMN_MAJOR,-1,1);
     float *c = (float*)malloc(M*N*sizeof(float));
 
     float *dev_a, *dev_b, *dev_c;
@@ -107,3 +107,11 @@ void test_cublas(const int M, const int K, const int N) {
     return;
 }
     
+int main(int argc, char * argv[]){
+    int M = std::atoi(argv[1]);
+    int K = std::atoi(argv[2]);
+    int N = std::atoi(argv[3]);
+
+    printf("M=%d K=%d N=%d\n",M,K,N);
+    test_cublas(M,K,N);
+}

@@ -125,19 +125,26 @@ bool check_mul(T* a, T* b, T* c, int M, int K, int N, int order_type_a, int orde
     /* Check if the result of matrix multiplication is right.*/
     std::cout<<std::setprecision(10);
     T value = 0;
+    
+    int err_count = 0;
+
 	for (int i = 0; i < M; ++i) {
 	    for (int j = 0; j < N; ++j) {
             value = 0;
             for (int k = 0; k < K; ++k) {
                 value += a[ IDX(i, k, M, K, order_type_a) ] * b[ IDX(k, j, K, N, order_type_b) ];
             }
-            if ( fabs(value - c[ IDX(i, j, M, N, order_type_c) ] ) > 0.1) {
-                std::cout << c[ IDX(i, j, M, N, order_type_c) ] << " " << value << std::endl;
-                return false;
+            if ( fabs(value - c[ IDX(i, j, M, N, order_type_c) ] ) > 0.01) {
+                // std::cout << c[ IDX(i, j, M, N, order_type_c) ] << " " << value << std::endl;
+                err_count += 1;
+                // return false;
             }
         }
     }
-    return true;
+
+    printf("Err count: %d\n", err_count);
+
+    return err_count == 0;
 }
 //end of utils namespace
 }

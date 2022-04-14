@@ -37,7 +37,6 @@ __global__ void mmCompOpt(float *A, float *B, float *C, int M, int K, int N){
 
     int aBegin  = K * TILE_SIZE * by;
     int aEnd    = aBegin + K;
-    int aStep   = TILE_SIZE;
 
     int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
     int bStep   = TILE_SIZE * N;
@@ -53,7 +52,7 @@ __global__ void mmCompOpt(float *A, float *B, float *C, int M, int K, int N){
     // int t3 = ty * TILE_SIZE + tx;
     // int t4;
 
-    for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
+    for(int a = aBegin, b = bBegin; a < aEnd; a += TILE_SIZE, b += bStep){
 
         for(i = 0; i < TILE_SIZE / VECTOR_SIZE; ++i){
             // load elements to As in column major way from matrix A
@@ -103,7 +102,6 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
 
     const int aBegin  = TILE_SIZE * K * by;
     const int aEnd    = aBegin + K;
-    const int aStep   = TILE_SIZE;
 
     const int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
     const int bStep   = TILE_SIZE * N;
@@ -117,37 +115,35 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
     float *aPtr, *bPtr;
     float bValue;
 
-    // to avoid repeated computations 
     const int t1 = tx * TILE_SIZE + ty;
     const int t2 = ty * K + tx;
     const int t3 = ty * TILE_SIZE + tx;
     const int t4 = TILE_SIZE / VECTOR_SIZE;
-    int t10      = 0;    
-
-    for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
+    int t10      = 0;
+    
+    for(int a = aBegin, b = bBegin; a < aEnd; a += TILE_SIZE, b += bStep){
         
         aPtr    = &As[ t1 ];
         bPtr    = &A[ a + t2 ];
         t10     = 0;
 
+        #pragma unroll
         for(i = 0; i < t4; ++i){
-            // load elements to As in column major way from matrix A
-            // As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + K * (i * VECTOR_SIZE + ty) + tx ];
-            // As[ t1 + t10 ] = A[ a + t10 * K + t2 ];
-            aPtr[ t10 ] = bPtr[ t10 * K ];
+            aPtr[ t10 ] = bPtr[ t10*K ];
             t10         += VECTOR_SIZE;
         }
         
         __syncthreads();
 
         aPtr = As;
-        // bPtr = &B[ b + TILE_SIZE * ty + tx ];
         bPtr = &B[ b + t3 ];
 
-        for(i = 0; i < TILE_SIZE; ++i){
+        #pragma unroll
+        for(i = 0; i < TILE_SIZE; i += 1){
             bValue = *bPtr;
 
-            for(j = 0; j < TILE_SIZE; ++j){
+            #pragma unroll
+            for(j = 0; j < TILE_SIZE; j += 1){
                 Cv[ j ] += aPtr[ j ] * bValue;
             }
 
@@ -159,158 +155,76 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
 
     }
 
-    j = N * TILE_SIZE * by + TILE_SIZE * VECTOR_SIZE * bx;
-    // c += TILE_SIZE * ty + tx;
+    j = bStep * by + bBegin;
     j += t3;
 
-    for(i = 0; i < TILE_SIZE; ++i){
+    #pragma unroll
+    for(i = 0; i < TILE_SIZE; i += 1){
         C[ j ] = Cv[ i ];
         j += N;
     }
 }
 
 
-//A is column major matrix
-__global__ void mmCompOpt_v2(float *A, float *B, float *C, const int M, const int K, const int N){
+int main(int argc, char *argv[]){
+    int M = std::atoi(argv[1]);
+    int K = std::atoi(argv[2]);
+    int N = std::atoi(argv[3]);
+
+    printf("M=%d K=%d N=%d\n",M,K,N);
+
+    float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-1,1);
+    float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-1,1);
+    float *C = (float*)malloc(sizeof(float)*M*N);
     
-    const int bx = blockIdx.x;
-    const int by = blockIdx.y;
+    float *dA, *dB, *dC;
 
-    const int tx = threadIdx.x;
-    const int ty = threadIdx.y;
+    cudaMalloc((void**)&dA,sizeof(float)*M*K);
+    cudaMalloc((void**)&dB,sizeof(float)*K*N);
+    cudaMalloc((void**)&dC,sizeof(float)*N*M);
 
-    const int aBegin  = TILE_SIZE * by;
-    const int aEnd    = K * M;
-    const int aStep   = TILE_SIZE * M;
+    cudaMemcpy(dA,A,sizeof(float)*M*K, cudaMemcpyHostToDevice);
+    cudaMemcpy(dB,B,sizeof(float)*K*N, cudaMemcpyHostToDevice);
 
-    const int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
-    const int bStep   = TILE_SIZE * N;
-
-    __shared__ float As[ TILE_SIZE * TILE_SIZE ];
-
-    float Cv[ TILE_SIZE ] = { 0 };
-
-    int i, j;
+    dim3 threads( TILE_SIZE, VECTOR_SIZE );
+    dim3 blocks(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
     
-    float *aPtr, *bPtr;
-    float bValue;
+    printf("%d %d\n", blocks.x, blocks.y);
 
-    // to avoid repeated computations 
-    const int t1 = tx * TILE_SIZE + ty;
-    const int t2 = tx * M + ty;
-    const int t3 = ty * TILE_SIZE + tx;
-    const int t4 = TILE_SIZE / VECTOR_SIZE;
-    int t10;
-
-    for(int a = aBegin, b = bBegin; a < aEnd; a += aStep, b += bStep){
-
-        for(i = 0; i < t4; ++i){
-            // load elements to As in column major way from matrix A
-            t10 = i * VECTOR_SIZE;
-            // As[ tx * TILE_SIZE + ty + i * VECTOR_SIZE ] = A[ a + M * tx + ty + i * VECTOR_SIZE ];
-            As[ t1 + t10 ] = A[ a + t2 + t10 ];
-        }
-        
-        __syncthreads();
-
-        aPtr = As;
-        // bPtr = &B[ b + TILE_SIZE * ty + tx ];
-        bPtr = &B[ b + t3 ];
-
-        for(i = 0; i < TILE_SIZE; ++i){
-            bValue = *bPtr;
-
-            for(j = 0; j < TILE_SIZE; ++j){
-                Cv[ j ] += aPtr[ j ] * bValue;
-            }
-
-            aPtr += TILE_SIZE;
-            bPtr += N;
-        }
-
-        __syncthreads();
-
+    mmCompOpt_v1<<<blocks,threads>>>(dA,dB,dC,M,K,N);
+    
+    
+    cudaError_t cuda_error = cudaGetLastError();
+    if(cuda_error != cudaSuccess)
+    {
+      printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
+      exit(-1);
     }
 
-    int c = N * TILE_SIZE * by + TILE_SIZE * VECTOR_SIZE * bx;
-    // c += TILE_SIZE * ty + tx;
-    c += t3;
+    cudaMemcpy(C,dC,sizeof(float)*N*M,cudaMemcpyDeviceToHost);
 
-    for(i = 0; i < TILE_SIZE; ++i){
-        C[ c ] = Cv[ i ];
-        c += N;
-    }
+#ifdef CHECK
+    std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
+            ? "Correct!!" : "Wrong Answer!") << std::endl;
+#endif
+#ifdef DEBUG
+    std::cout << "Matrix A:" << std::endl;
+    utils::print_mat_gpu(a, M, K, utils::ROW_MAJOR);
+    std::cout << "Matrix B:" << std::endl;
+    utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
+    std::cout << "Matrix C:" << std::endl;
+    utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
+#endif
+    cudaFree(dA);
+    cudaFree(dB);
+    cudaFree(dC);
+
+    free(A);
+    free(B);
+    free(C);
+
+    return 0;
 }
-
-// int main(int argc, char *argv[]){
-//     int M = std::atoi(argv[1]);
-//     int K = std::atoi(argv[2]);
-//     int N = std::atoi(argv[3]);
-
-//     printf("M=%d K=%d N=%d\n",M,K,N);
-
-//     float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
-//     float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
-//     float *C = (float*)malloc(sizeof(float)*M*N);
-    
-//     float ms;
-//     float *dA, *dB, *dC;
-
-//     cudaMalloc((void**)&dA,sizeof(float)*M*K);
-//     cudaMalloc((void**)&dB,sizeof(float)*K*N);
-//     cudaMalloc((void**)&dC,sizeof(float)*N*M);
-
-//     cudaMemcpy(dA,A,sizeof(float)*M*K, cudaMemcpyHostToDevice);
-//     cudaMemcpy(dB,B,sizeof(float)*K*N, cudaMemcpyHostToDevice);
-
-//     dim3 threads( TILE_SIZE, VECTOR_SIZE );
-//     dim3 blocks(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
-    
-//     cudaEvent_t start, stop;
-//     cudaEventCreate(&start);
-//     cudaEventCreate(&stop);
-//     cudaEventRecord(start);
-    
-//     mmCompOpt_v1<<<blocks,threads>>>(dA,dB,dC,M,K,N);
-    
-//     cudaEventRecord(stop);
-//     cudaEventSynchronize(stop);
-//     cudaEventElapsedTime(&ms, start, stop);
-//     cudaEventDestroy(start);
-//     cudaEventDestroy(stop);
-    
-//     cudaError_t cuda_error = cudaGetLastError();
-//     if(cuda_error != cudaSuccess)
-//     {
-//       printf("CUDA error: %s\n", cudaGetErrorString(cuda_error));
-//       exit(-1);
-//     }
-
-//     cudaMemcpy(C,dC,sizeof(float)*N*M, cudaMemcpyDeviceToHost);
-
-// #ifdef CHECK
-//     std::cout << (utils::check_mul<float>(A, B, C, M, K, N, utils::ROW_MAJOR, utils::ROW_MAJOR, utils::ROW_MAJOR) 
-//             ? "Correct!!" : "Wrong Answer!") << std::endl;
-// #endif
-// #ifdef DEBUG
-//     std::cout << "Matrix A:" << std::endl;
-//     utils::print_mat_gpu(a, M, K, utils::COLUMN_MAJOR);
-//     std::cout << "Matrix B:" << std::endl;
-//     utils::print_mat_gpu(b, K, N, utils::ROW_MAJOR);
-//     std::cout << "Matrix C:" << std::endl;
-//     utils::print_mat_gpu(c, M, N, utils::ROW_MAJOR);
-// #endif
-//     cudaFree(dA);
-//     cudaFree(dB);
-//     cudaFree(dC);
-
-//     free(A);
-//     free(B);
-//     free(C);
-
-//     printf("%f\n",ms);
-//     return 0;
-// }
 
 
 
