@@ -9,7 +9,7 @@
 #define TILE_SIZE 16
 #endif
 #ifndef VECTOR_SIZE
-#define VECTOR_SIZE 4
+#define VECTOR_SIZE 8
 #endif
 
 /*
@@ -166,6 +166,71 @@ __global__ void mmCompOpt_v1(float *A, float *B, float *C, const int M, const in
 }
 
 
+__global__ void mmCompOpt_v2(float *A, float *B, float *C, const int M, const int K, const int N){
+    
+ 
+    const int bBegin  = TILE_SIZE * VECTOR_SIZE * blockIdx.x;
+    const int bStep   = TILE_SIZE * N;
+
+    __shared__ float As[ TILE_SIZE * TILE_SIZE ];
+
+    float Cv[ TILE_SIZE ] = { 0 };
+
+    int i, j;
+    
+    float *aPtr, *bPtr;
+    float bValue;
+
+    const int t1 = threadIdx.x * TILE_SIZE + threadIdx.y;
+    const int t2 = threadIdx.y * K + threadIdx.x;
+    const int t3 = threadIdx.y * TILE_SIZE + threadIdx.x;
+
+    int t10      = 0;
+    
+    for(int a = TILE_SIZE * K * blockIdx.y, b = bBegin; a < TILE_SIZE * K * blockIdx.y + K; a += TILE_SIZE, b += bStep){
+        
+        aPtr    = &As[ t1 ];
+        bPtr    = &A[ a + t2 ];
+        t10     = 0;
+
+        #pragma unroll
+        for(i = 0; i < TILE_SIZE / VECTOR_SIZE; ++i){
+            aPtr[ t10 ] = bPtr[ t10*K ];
+            t10         += VECTOR_SIZE;
+        }
+        
+        __syncthreads();
+
+        aPtr = As;
+        bPtr = &B[ b + t3 ];
+
+        #pragma unroll
+        for(i = 0; i < TILE_SIZE; i += 1){
+            bValue = *bPtr;
+
+            #pragma unroll
+            for(j = 0; j < TILE_SIZE; j += 1){
+                Cv[ j ] += aPtr[ j ] * bValue;
+            }
+
+            aPtr += TILE_SIZE;
+            bPtr += N;
+        }
+
+        __syncthreads();
+
+    }
+
+    j = bStep * blockIdx.y + bBegin;
+    j += t3;
+
+    #pragma unroll
+    for(i = 0; i < TILE_SIZE; i += 1){
+        C[ j ] = Cv[ i ];
+        j += N;
+    }
+}
+
 int main(int argc, char *argv[]){
     int M = std::atoi(argv[1]);
     int K = std::atoi(argv[2]);
@@ -191,7 +256,7 @@ int main(int argc, char *argv[]){
     
     printf("%d %d\n", blocks.x, blocks.y);
 
-    mmCompOpt_v1<<<blocks,threads>>>(dA,dB,dC,M,K,N);
+    mmCompOpt_v2<<<blocks,threads>>>(dA,dB,dC,M,K,N);
     
     
     cudaError_t cuda_error = cudaGetLastError();

@@ -85,6 +85,7 @@ __global__ void matmul_Prefetch(T *A, T *B, T *C, int M, int K, int N) {
 }
 
 
+
 int main(int argc, char *argv[]) {
 	int M = std::atoi(argv[1]);
 	int K = std::atoi(argv[2]);

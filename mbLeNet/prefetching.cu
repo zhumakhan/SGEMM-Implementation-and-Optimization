@@ -36,8 +36,8 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
     const int bBegin  = TILE_SIZE * VECTOR_SIZE * bx;
     const int bStep   = TILE_SIZE * N;
 
-    __shared__ float As1[ TILE_SIZE * TILE_SIZE ];
-    __shared__ float As2[ TILE_SIZE * TILE_SIZE ];
+    __shared__ float As1[ TILE_SIZE * TILE_SIZE];
+    __shared__ float As2[ TILE_SIZE * TILE_SIZE];
 
     float Cv[ TILE_SIZE ] = { 0 };
 
@@ -117,6 +117,169 @@ __global__ void mmPrefetching(float *A, float *B, float *C, const int M, const i
 }
 
 
+
+
+__global__ void mmPrefetching1(float *A, float *B, float *C, const int M, const int K, const int N){
+    const int aEnd = TILE_SIZE * K * blockIdx.y + K;
+    const int bBegin  = TILE_SIZE * VECTOR_SIZE * blockIdx.x;
+    const int bStep   = TILE_SIZE * N;
+
+    __shared__ float As1[ TILE_SIZE * TILE_SIZE ];
+    __shared__ float As2[ TILE_SIZE * TILE_SIZE ];
+
+    float Cv[ TILE_SIZE ] = { 0 };
+
+    int i, j;
+    
+    float *ptr1, *ptr2;
+    float bValue;
+
+    
+    const int t1 = threadIdx.x * TILE_SIZE + threadIdx.y;
+    const int t2 = threadIdx.y * K + threadIdx.x;
+    const int t3 = threadIdx.y * TILE_SIZE + threadIdx.x;
+    int t10      = 0;
+
+    float *pre1 = As1;
+    float *pre2 = As2;
+
+    ptr1 = (pre1 + t1);
+    ptr2 = (A + TILE_SIZE * K * blockIdx.y + t2 );
+
+    #pragma unroll
+    for(i = 0; i < TILE_SIZE / VECTOR_SIZE; i += 1, t10 += VECTOR_SIZE){
+        ptr1[ t10 ] = ptr2[ t10 * K ];
+    }
+    __syncthreads();
+
+
+
+    for(size_t a = TILE_SIZE * K * blockIdx.y, b = bBegin; a < aEnd;  b += bStep){
+        
+        ptr1    = (pre2 + t1 );
+        ptr2    = (A + a + TILE_SIZE + t2 );
+        t10     = 0;
+        a  += TILE_SIZE;
+        if(a < aEnd or true){
+            #pragma unroll
+            for(i = 0; i < TILE_SIZE / VECTOR_SIZE; i += 1){
+                // load elements to As in column major way from matrix A
+                ptr1[ t10 ] = ptr2[ t10 * K ];
+                t10         += VECTOR_SIZE;
+            }
+        }
+
+        ptr1 = pre1;
+        ptr2 = (B + b + t3 );
+
+        
+        #pragma unroll
+        for(i = 0; i < TILE_SIZE; i += 1, ptr1 += TILE_SIZE, ptr2 += N){
+            bValue = *ptr2;
+
+            #pragma unroll
+            for(j = 0; j < TILE_SIZE; j += 1){
+                Cv[ j ] += ptr1[ j ] * bValue;
+            }
+        }
+        __syncthreads();
+
+        ptr1 = pre1;
+        pre1 = pre2;
+        pre2 = ptr1;
+
+    }
+
+    j = bStep * blockIdx.y + bBegin + t3;
+
+    #pragma unroll
+    for(i = 0; i < TILE_SIZE; i += 1, j += N){
+        C[ j ] = Cv[ i ];
+    }
+}
+
+__global__ void mmPrefetching2(float *A, float *B, float *C, const int M, const int K, const int N){
+    const int aEnd = TILE_SIZE * K * blockIdx.x + K;
+    const int bBegin  = TILE_SIZE * VECTOR_SIZE * blockIdx.y;
+    const int bStep   = TILE_SIZE * N;
+
+    __shared__ float As1[ TILE_SIZE * TILE_SIZE ];
+    __shared__ float As2[ TILE_SIZE * TILE_SIZE ];
+
+    float Cv[ TILE_SIZE ] = { 0 };
+
+    int i, j;
+    
+    float *ptr1, *ptr2;
+    float bValue;
+
+    
+    const int t1 = threadIdx.x * TILE_SIZE + threadIdx.y;
+    const int t2 = threadIdx.y * K + threadIdx.x;
+    const int t3 = threadIdx.y * TILE_SIZE + threadIdx.x;
+    int t10      = 0;
+
+    float *pre1 = As1;
+    float *pre2 = As2;
+
+    ptr1 = (pre1 + t1);
+    ptr2 = (A + TILE_SIZE * K * blockIdx.x + t2 );
+
+    #pragma unroll
+    for(i = 0; i < TILE_SIZE / VECTOR_SIZE; i += 1, t10 += VECTOR_SIZE){
+        ptr1[ t10 ] = ptr2[ t10 * K ];
+    }
+    __syncthreads();
+
+
+
+    for(size_t a = TILE_SIZE * K * blockIdx.x, b = bBegin; a < aEnd;  b += bStep){
+        
+        ptr1    = (pre2 + t1 );
+        ptr2    = (A + a + TILE_SIZE + t2 );
+        t10     = 0;
+        a  += TILE_SIZE;
+        if(a < aEnd or true){
+            #pragma unroll
+            for(i = 0; i < TILE_SIZE / VECTOR_SIZE; i += 1){
+                // load elements to As in column major way from matrix A
+                ptr1[ t10 ] = ptr2[ t10 * K ];
+                t10         += VECTOR_SIZE;
+            }
+        }
+
+        ptr1 = pre1;
+        ptr2 = (B + b + t3 );
+
+        
+        #pragma unroll
+        for(i = 0; i < TILE_SIZE; i += 1, ptr1 += TILE_SIZE, ptr2 += N){
+            bValue = *ptr2;
+
+            #pragma unroll
+            for(j = 0; j < TILE_SIZE; j += 1){
+                Cv[ j ] += ptr1[ j ] * bValue;
+            }
+        }
+        __syncthreads();
+
+        ptr1 = pre1;
+        pre1 = pre2;
+        pre2 = ptr1;
+
+    }
+
+    j = bStep * blockIdx.x + bBegin + t3;
+
+    #pragma unroll
+    for(i = 0; i < TILE_SIZE; i += 1, j += N){
+        C[ j ] = Cv[ i ];
+    }
+}
+
+
+
+
 int main(int argc, char *argv[]){
     int M = std::atoi(argv[1]);
     int K = std::atoi(argv[2]);
@@ -124,8 +287,8 @@ int main(int argc, char *argv[]){
 
     printf("M=%d K=%d N=%d\n",M,K,N);
 
-    float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-50,50);
-    float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-50,50);
+    float *A = utils::random_matrix_gpu<float>(M, K, utils::ROW_MAJOR,-1,1);
+    float *B = utils::random_matrix_gpu<float>(K, N, utils::ROW_MAJOR,-1,1);
     float *C = (float*)malloc(sizeof(float)*M*N);
     
     float ms;
@@ -140,6 +303,8 @@ int main(int argc, char *argv[]){
 
     dim3 threads( TILE_SIZE, VECTOR_SIZE );
     dim3 blocks(N / (TILE_SIZE * VECTOR_SIZE), M / TILE_SIZE);
+    dim3 blocks2(M / TILE_SIZE, N / (TILE_SIZE * VECTOR_SIZE));
+
 
     printf("%d %d %d\n", blocks.x, blocks.y, blocks.z);
 
@@ -149,7 +314,7 @@ int main(int argc, char *argv[]){
     cudaEventCreate(&stop);
     cudaEventRecord(start);
     
-    mmPrefetching<<<blocks,threads>>>(dA,dB,dC,M,K,N);
+    mmPrefetching2<<<blocks2,threads>>>(dA,dB,dC,M,K,N);
     
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
